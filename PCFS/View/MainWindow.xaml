@@ -3,11 +3,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:PCFS.ViewModel"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:PCFS"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="1000">
-    <Grid>
+    <Window.Resources>
+        <vm:MainWindowViewModel x:Key="MainWindowViewModel" />
+    </Window.Resources>
+    <Grid DataContext="{StaticResource MainWindowViewModel}">
         
     </Grid>
 </Window>
