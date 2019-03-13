@@ -114,7 +114,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup />
-  <Import Project="..\..\SharedProjects\PIStage_Library\PIStage_Library.projitems" Label="Shared" />
-  <Import Project="..\..\SharedProjects\TimeTagger_Library\TimeTagger_Library.projitems" Label="Shared" />
+  <Import Project="..\..\ProjectLibrary\PIStage_Library\PIStage_Library.projitems" Label="Shared" />
+  <Import Project="..\..\ProjectLibrary\TimeTagger_Library\TimeTagger_Library.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
