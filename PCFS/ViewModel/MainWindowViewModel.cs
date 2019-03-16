@@ -15,6 +15,8 @@ namespace PCFS.ViewModel
 
         public MainWindowViewModel()
         {
+            //Do sum stuff in master branch
+
             PI_GCS2_Stage linearstage = new PI_GCS2_Stage(null);
             linearstage.Connect("C-863");
 
