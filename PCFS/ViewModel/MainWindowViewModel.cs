@@ -15,34 +15,34 @@ namespace PCFS.ViewModel
 
         public MainWindowViewModel()
         {
-            PI_GCS2_Stage linearstage = new PI_GCS2_Stage(null);
-            linearstage.Connect("C-863");
+            //PI_GCS2_Stage linearstage = new PI_GCS2_Stage(null);
+            //linearstage.Connect("C-863");
 
-            Stopwatch sw = new Stopwatch();
+            //Stopwatch sw = new Stopwatch();
 
-            while (true)
-            {
-                linearstage.SetVelocity(25);
-                linearstage.Move_Absolute(0);
-                linearstage.SetVelocity(25);
-                linearstage.Move_Absolute(20);
-                linearstage.WaitForPos();
-                sw.Start();
-                linearstage.SetVelocity(0.005);
-                linearstage.Move_Relative(0.05);
-                linearstage.WaitForPos();
-                sw.Stop();
-                linearstage.SetVelocity(25);
-                linearstage.Move_Absolute(200);
-                linearstage.WaitForPos();
-            }
+            //while (true)
+            //{
+            //    linearstage.SetVelocity(25);
+            //    linearstage.Move_Absolute(0);
+            //    linearstage.SetVelocity(25);
+            //    linearstage.Move_Absolute(20);
+            //    linearstage.WaitForPos();
+            //    sw.Start();
+            //    linearstage.SetVelocity(0.005);
+            //    linearstage.Move_Relative(0.05);
+            //    linearstage.WaitForPos();
+            //    sw.Stop();
+            //    linearstage.SetVelocity(25);
+            //    linearstage.Move_Absolute(200);
+            //    linearstage.WaitForPos();
+            //}
 
-            tagger = new HydraHarpTagger(null);
-            tagger.PacketSize = 500;
+            //tagger = new HydraHarpTagger(null);
+            //tagger.PacketSize = 500;
 
-            tagger.TimeTagsCollected += Tagger_TimeTagsCollected;
+            //tagger.TimeTagsCollected += Tagger_TimeTagsCollected;
 
-            tagger.StartCollectingTimeTagsAsync();
+            //tagger.StartCollectingTimeTagsAsync();
 
         }
 
