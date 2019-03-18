@@ -16,18 +16,25 @@
     
     <Grid DataContext="{StaticResource MainWindowViewModel}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="5" />
+            <RowDefinition Height="0" />
+            <RowDefinition Height="60" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="5" />
+            <RowDefinition Height="100"/>
+            <RowDefinition Height="0" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="0" />
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="0" />
         </Grid.ColumnDefinitions>
         
         <!-- PROPERTY SECTION -->
-        <Border Grid.Row="1" Grid.Column="1" Background="LightGray" BorderThickness="1" BorderBrush="Black">
+        <ScrollViewer Grid.Row="1" Grid.RowSpan="3" Grid.Column="1" Background="LightGray" 
+                      BorderThickness="1" BorderBrush="Black" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Auto">
+                                    
             <StackPanel  Orientation="Vertical" Margin="5">
                 <StackPanel.Resources>
 
@@ -44,7 +51,7 @@
 
                 </StackPanel.Resources>
 
-                <TextBlock Text="Settings" HorizontalAlignment="Center" FontSize="16" Margin="0,0,0,10"/>
+                <TextBlock Text="Settings" HorizontalAlignment="Center" FontSize="20" Margin="0,0,0,10"/>
 
                 <!-- TimeTagger-->
                 <Grid>
@@ -103,7 +110,45 @@
                 </Grid>
 
             </StackPanel>
-        </Border>
+         
+        </ScrollViewer>
         
+        <!-- STATUS BAR -->
+        <Border Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" BorderBrush="Black" Background="LightGray">
+            
+        </Border>
+
+        <!-- DATA AREA -->
+        <Grid Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="200"/>
+            </Grid.ColumnDefinitions>
+            <Grid.Resources>
+                <Style TargetType="lvc:CartesianChart">
+                    <Setter Property="Margin" Value="5"/>
+                    <Setter Property="AnimationsSpeed" Value="00:00:00.2"/>
+                </Style>
+            </Grid.Resources>
+
+            <lvc:CartesianChart Grid.Row="0" Grid.Column="0"/>
+
+            <lvc:CartesianChart Grid.Row="0" Grid.Column="1"/>
+
+            <lvc:CartesianChart Grid.Row="1" Grid.Column="0"/>
+        </Grid>
+
+
+        <!-- MESSAGE AREA -->
+        <Border Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2" BorderBrush="Black" Background="LightGray">
+            <ScrollViewer VerticalScrollBarVisibility="auto" Margin="5">
+                <TextBox Text="MessageArea"/>
+            </ScrollViewer>
+        </Border>
+
     </Grid>
 </Window>
