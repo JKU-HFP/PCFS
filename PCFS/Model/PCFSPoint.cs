@@ -10,7 +10,9 @@ namespace PCFS.Model
     public class PCFSPoint
     {
         //Private fields
-        private Kurolator _correlator;
+        private Kurolator _PCFSCorrelator;
+        private Kurolator _G2PreviewCorrelator;
+
         private long[] _timeBins;
         private byte _chan0;
         private byte _chan1;
@@ -33,6 +35,9 @@ namespace PCFS.Model
         public double[] HistogramYNorm { get; private set; }
         public double[] HistogramYNormErr { get; private set; }
 
+        public long[] HistogramXPreview { get; private set; }
+        public long[] HistogramYPreview { get; private set; }
+
 
         public PCFSPoint(BinningListHistogram binningListHistogram, ulong timeWindow)
         {
@@ -40,9 +45,17 @@ namespace PCFS.Model
             _chan0 = binningListHistogram.CorrelationConfig[0].cA;
             _chan1 = binningListHistogram.CorrelationConfig[0].cB;
 
-            _correlator = new Kurolator(new List<CorrelationGroup> { binningListHistogram }, timeWindow);
+            //Setup PCFS Correlator
+            _PCFSCorrelator = new Kurolator(new List<CorrelationGroup> { binningListHistogram }, timeWindow);
 
-            HistogramX = _correlator[0].Histogram_X;
+            //Setup G2 Preview Correlator
+            ulong previewTimeWindow = 1000000;
+
+            CorrelationGroup g2previewGroup = new CorrelationGroup(binningListHistogram.CorrelationConfig, previewTimeWindow);
+            _G2PreviewCorrelator = new Kurolator(new List<CorrelationGroup> { g2previewGroup }, previewTimeWindow);
+
+            HistogramX = _PCFSCorrelator[0].Histogram_X;
+            HistogramXPreview = _G2PreviewCorrelator[0].Histogram_X;
 
             PerformedScans = 0;
         }
@@ -56,18 +69,23 @@ namespace PCFS.Model
                 TotalCountsCh0 += tt.TotalCounts[_chan0];
                 TotalCountsCh1 += tt.TotalCounts[_chan1];
 
-                _correlator.AddCorrelations(tt, tt, OffsetCh1);
-                _correlator[0].ClearAllCorrelations(); //Clear correlations to save memory
+                _PCFSCorrelator.AddCorrelations(tt, tt, OffsetCh1);
+                _PCFSCorrelator[0].ClearAllCorrelations(); //Clear correlations to save memory
+
+                _G2PreviewCorrelator.AddCorrelations(tt, tt, OffsetCh1);
+                _G2PreviewCorrelator[0].ClearAllCorrelations(); //Clear correlations to save memory
             }
 
             //Histograms and Normalization
             NormalizationFactor = TotalTime / ((double)TotalCountsCh0 * (double)TotalCountsCh1);
 
-            HistogramY = _correlator[0].Histogram_Y;
+            HistogramY = _PCFSCorrelator[0].Histogram_Y;
             HistogramYErr = HistogramY.Select(p => Math.Sqrt(p)).ToArray();
             
             HistogramYNorm = HistogramY.Zip(_timeBins, (yval, bin) => yval * (NormalizationFactor / bin) ).ToArray();
             HistogramYNormErr = HistogramYErr.Zip(_timeBins, (yval, bin) => yval * (NormalizationFactor / bin)).ToArray();
+
+            HistogramXPreview = _G2PreviewCorrelator[0].Histogram_Y;
 
             PerformedScans++;
         }

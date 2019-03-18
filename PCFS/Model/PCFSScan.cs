@@ -105,7 +105,7 @@ namespace PCFS.Model
      
             for (int i=0; i<NumSteps; i++)
             {
-                BinningListHistogram hist = new BinningListHistogram(_corrConfig, _binningList, TimeWindow);
+                BinningListHistogram hist = new BinningListHistogram(_corrConfig, _binningList, (ulong)TimeWindow);
                 _PCFSPoints.Add(new PCFSPoint(hist, (ulong)TimeWindow)
                 {
                     StagePosition = MinPosition + i * StepWidth,
@@ -212,7 +212,7 @@ namespace PCFS.Model
                 CalculatePCFS();
             });
 
-            OnPCFSCalculated(new PCFSCalculatedEventArgs() { PCFSCurves = new List<PCFSCurve>(_PCFSCurves) });
+            OnPCFSCalculated(new PCFSCalculatedEventArgs(_PCFSPoints, _PCFSCurves));
         }
         
         private void CalculatePCFS()
@@ -287,7 +287,14 @@ namespace PCFS.Model
 
     public class PCFSCalculatedEventArgs
     {
-        public List<PCFSCurve> PCFSCurves { get; set; }
+        public List<PCFSPoint> PCFSPoints { get; }
+        public List<PCFSCurve> PCFSCurves { get; }
+
+        public PCFSCalculatedEventArgs(List<PCFSPoint> pcfspoints, List<PCFSCurve> pcfscurves)
+        {
+            PCFSPoints = pcfspoints;
+            PCFSCurves = pcfscurves;
+        }
 
     }
 
