@@ -94,6 +94,10 @@ namespace PCFS.Model
 
         public void InitializePCFSPoints()
         {
+            if(!File.Exists(BinningListFilename))
+            {
+                WriteLog("Binning list file does not exist.");
+            }
             _binningList = GetBinningList(BinningListFilename);
             
             StepWidth = (MaxPosition - MinPosition) / NumSteps;
@@ -163,6 +167,7 @@ namespace PCFS.Model
             }
 
             DataAvailable = true;
+            ScanPointsInitialized = false;
             _scanBgWorker.RunWorkerAsync();
         }
 
@@ -269,7 +274,10 @@ namespace PCFS.Model
             }
         }
 
-        
+        public void StopScan()
+        {
+            _scanBgWorker.CancelAsync();
+        }
 
         private void WriteLog(string message)
         {
