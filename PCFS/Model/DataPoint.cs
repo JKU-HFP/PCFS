@@ -53,7 +53,7 @@ namespace PCFS.Model
             //Setup G2 Preview Correlator
             ulong previewTimeWindow = 1000000;
 
-            CorrelationGroup g2previewGroup = new CorrelationGroup(binningListHistogram.CorrelationConfig, previewTimeWindow);
+            Histogram g2previewGroup = new Histogram(binningListHistogram.CorrelationConfig, previewTimeWindow);
             _G2PreviewCorrelator = new Kurolator(new List<CorrelationGroup> { g2previewGroup }, previewTimeWindow);
 
             HistogramX = _PCFSCorrelator[0].Histogram_X;

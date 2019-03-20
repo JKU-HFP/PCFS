@@ -26,7 +26,7 @@ namespace PCFS.Model
         private List<(byte ch0, byte ch1)> _corrConfig;
         private List<(long low, long high)> _binningList;
 
-        private PI_GCS2_Stage _linearStage;
+        private ILinearStage _linearStage;
         private ITimeTagger _timeTagger;
 
         private BackgroundWorker _scanBgWorker;
@@ -42,6 +42,7 @@ namespace PCFS.Model
         //Status
         public bool ScanPointsInitialized { get; private set; } = false;
         public bool DataAvailable { get; private set; } = false;
+        public bool ScanInProgress { get; private set; } = false;
         public int RepetionsDone { get; private set; } = 0;
         public DateTime ScanStartTime;
 
@@ -86,11 +87,25 @@ namespace PCFS.Model
             _loggerCallback = loggercallback;
 
             _DataPoints = new List<DataPoint> { };
+            _PCFSCurves = new List<PCFSCurve>();
 
-            _linearStage = new PI_GCS2_Stage(_loggerCallback);
-            _linearStage.Connect("C - 863");
+            //================ Simulations ================
 
-            _timeTagger = new HydraHarpTagger(_loggerCallback);
+            //_linearStage = new PI_GCS2_Stage(_loggerCallback);
+            //_linearStage.Connect("C - 863");
+
+            //_timeTagger = new HydraHarpTagger(_loggerCallback);
+
+            _linearStage = new SimulatedLinearStage();
+
+            _timeTagger = new SimulatedTagger(_loggerCallback)
+            {
+                PacketSize = 1000,
+                FileName = @"C:\Users\Christian\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
+                PacketDelayTimeMilliSeonds = 1000
+            };
+            
+            //==============================================
 
             _scanBgWorker = new BackgroundWorker();
             _scanBgWorker.WorkerReportsProgress = true;
@@ -116,7 +131,8 @@ namespace PCFS.Model
 
             RepetionsDone = 0;
             DataAvailable = false;
-     
+
+            _DataPoints.Clear();
             for (int i=0; i<NumSteps; i++)
             {
                 BinningListHistogram hist = new BinningListHistogram(_corrConfig, _binningList, (ulong)TimeWindow);
@@ -131,7 +147,7 @@ namespace PCFS.Model
 
             //Initialize PCFS Curves
 
-            _PCFSCurves = new List<PCFSCurve>();
+            _PCFSCurves.Clear();
             foreach(var bin in _binningList)
             {
                 _PCFSCurves.Add(new PCFSCurve() { Binning = bin });
@@ -189,9 +205,12 @@ namespace PCFS.Model
 
             DataAvailable = true;
             ScanPointsInitialized = false;
+            ScanInProgress = true;
 
             ScanStartTime = DateTime.Now;
-            _dataPointsDirectory = Directory.CreateDirectory("DataPoints_"+ScanStartTime.ToString("yyyy’_‘MM’_‘dd’_’HH’_’mm"));
+            _dataPointsDirectory = Directory.CreateDirectory("DataPoints_"+ScanStartTime.ToString("yyyy_MM_dd_HH_mm"));
+
+            WriteLog("Start scanning.");
 
             _scanBgWorker.RunWorkerAsync();
         }
@@ -202,7 +221,7 @@ namespace PCFS.Model
             {
                 foreach(DataPoint pcfsPoint in _DataPoints)
                 {
-                    if (e.Cancel) return;
+                    if (_scanBgWorker.CancellationPending) return;
 
                     //Stop tagger and clear buffer
                     _timeTagger.StopCollectingTimeTags();
@@ -231,6 +250,7 @@ namespace PCFS.Model
                     ScanProgressChangedEventArgs scanprogress = new ScanProgressChangedEventArgs();
                     _scanBgWorker.ReportProgress(0, scanprogress);
                 }
+                RepetionsDone++;
             }
         }
 
@@ -262,7 +282,7 @@ namespace PCFS.Model
                                      dp.HistogramYNorm[i].ToString(fF, cult) + "\t" + dp.HistogramYNormErr[i].ToString(fF, cult);   
             }
 
-            string filename = Path.Combine(_dataPointsDirectory.ToString(), "Point_+" + dp.Index +".dat");
+            string filename = Path.Combine(_dataPointsDirectory.ToString(), "Point_" + dp.Index +".dat");
             File.WriteAllLines(filename, outputLines);
         }
 
@@ -273,7 +293,7 @@ namespace PCFS.Model
 
             //Calculate energy scale
             double[] positions = relevantPoints.Select(p => p.StagePosition).ToArray();
-            double eScaleFactor = 299792458.0 * 2 * Math.PI / (positions.Length * StepWidth);
+            double eScaleFactor = 1.23984 / (positions.Length * StepWidth); //10^6 * 2 pi c hbar / eCharge [ueV]
             double[] energyScale = positions.Select(p => p * eScaleFactor).ToArray();
 
             int numBins = _binningList.Count;
@@ -305,6 +325,8 @@ namespace PCFS.Model
 
         private void ScanCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            ScanInProgress = false;
+
             if(e.Cancelled)
             {
                 WriteLog("Scan cancelled.");

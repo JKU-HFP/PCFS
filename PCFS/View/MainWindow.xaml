@@ -225,7 +225,10 @@
 
             <Border Grid.Row="1" Grid.Column="1" BorderBrush="Black" BorderThickness="1"
                     DataContext="{Binding SelectedDataPoint}">
-                <TextBox Text="{Binding StagePosition}" />
+                <StackPanel Orientation="Vertical">
+                    <TextBox IsReadOnly="True" Text="{Binding StagePosition}" />
+                    <TextBox IsReadOnly="True" Text="{Binding PerformedScans, Mode=OneWay}" />
+                </StackPanel>
             </Border>
            
 

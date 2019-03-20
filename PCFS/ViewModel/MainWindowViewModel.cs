@@ -249,6 +249,7 @@ namespace PCFS.ViewModel
             //Create Scan object
             _pcfsScan = new PCFSScan(WriteLog);
             _pcfsScan.ScanInitialized += OnScanInitialized;
+            _pcfsScan.DataChanged += OnDataChanged;
 
             //Create chart elements
             G2Points = new ChartValues<ObservablePoint> { };
@@ -257,7 +258,7 @@ namespace PCFS.ViewModel
             G2SeriesCollection.Add(G2LineSeries);
 
             PEPoints = new ChartValues<ObservablePoint> { };
-            PELineSeries = new LineSeries() { Values = G2Points };
+            PELineSeries = new LineSeries() { Values = PEPoints };
             PESeriesCollection = new SeriesCollection();
             PESeriesCollection.Add(PELineSeries);
            
@@ -268,7 +269,8 @@ namespace PCFS.ViewModel
                 if (of.ShowDialog() == DialogResult.OK) BinningListFilename = of.FileName;
             });
 
-            InitializeCommand = new RelayCommand<object>(o =>
+            InitializeCommand = new RelayCommand<object>(
+            o =>
             {
                 _pcfsScan.chan0 = Chan0;
                 _pcfsScan.chan1 = Chan1;
@@ -287,17 +289,16 @@ namespace PCFS.ViewModel
                 _pcfsScan.BinningListFilename = BinningListFilename;
 
                 _pcfsScan.InitializePCFSPoints();
-            });
+            },
+            o => !_pcfsScan.ScanInProgress
+            );
 
             StartScanCommand = new RelayCommand<object>(
             o=>
             {
                 _pcfsScan.StartScanAsync();
             },
-            o=>
-            {
-               return _pcfsScan.ScanPointsInitialized;
-            }
+            o=> _pcfsScan.ScanPointsInitialized         
             );
 
             StopScanCommand = new RelayCommand<object>(o =>
@@ -316,6 +317,9 @@ namespace PCFS.ViewModel
 
             G2Points.Clear();                     
             G2Points.AddRange(_selectedPCFSCurve.positions.Zip(_selectedPCFSCurve.G2, (pos, g2) => new ObservablePoint(pos, g2)));
+
+            PEPoints.Clear();
+            PEPoints.AddRange(_selectedPCFSCurve.Energy.Zip(_selectedPCFSCurve.pE, (e, pe) => new ObservablePoint(e, pe)));
         }
 
         private void OnDataPointSelected(ChartPoint point)
@@ -327,11 +331,18 @@ namespace PCFS.ViewModel
         {
             DataPoints = new ObservableCollection<DataPoint>(e.DataPoints);
             PCFSCurves = new ObservableCollection<PCFSCurve>(e.PCFSCurves);
+
+            _selectedPCFSCurve = PCFSCurves[0];
+        }
+
+        private void OnDataChanged(object sender, DataChangedEventArgs e)
+        {
+            UpdateCharts();
         }
 
         private void WriteLog(string message)
         {
-            _messages = message + "\n" + _messages;
+            Messages = message + "\n" + Messages;
         }
     }
 }
