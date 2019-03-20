@@ -8,6 +8,10 @@ using System.Diagnostics;
 using TimeTagger_Library;
 using System.Windows.Forms;
 using PCFS.Model;
+using System.Collections.ObjectModel;
+using LiveCharts;
+using LiveCharts.Wpf;
+using LiveCharts.Defaults;
 
 namespace PCFS.ViewModel
 {
@@ -16,7 +20,11 @@ namespace PCFS.ViewModel
         //Private fields
         PCFSScan _pcfsScan;
 
-        //Properties
+        //#########################
+        // P R O P E R T I E S
+        //#########################
+
+        //Settings
         private byte _chan0 = 0;
         public byte Chan0
         {
@@ -169,6 +177,60 @@ namespace PCFS.ViewModel
             }
         }
 
+        //Data
+
+        private ObservableCollection<DataPoint> dataPoints;
+        public ObservableCollection<DataPoint> DataPoints
+        {
+            get { return dataPoints; }
+            set
+            {
+                dataPoints = value;
+                OnPropertyChanged("DataPoints");
+            }
+        }
+
+        private ObservableCollection<PCFSCurve> _PCFSCurves;
+        public ObservableCollection<PCFSCurve> PCFSCurves
+        {
+            get => _PCFSCurves;
+            set
+            {
+                _PCFSCurves = value;
+                OnPropertyChanged("PCFSCurves");
+            }
+        }
+
+        private DataPoint _selectedDataPoint;
+        public DataPoint SelectedDataPoint
+        {
+            get { return _selectedDataPoint; }
+            set
+            {
+                _selectedDataPoint = value;
+                OnPropertyChanged("SelectedDataPoint");
+            }
+        }
+
+        private PCFSCurve _selectedPCFSCurve;
+        public PCFSCurve SelectedPCFSCurve
+        {
+            get { return _selectedPCFSCurve; }
+            set
+            {
+                _selectedPCFSCurve = value;
+                OnPropertyChanged("SelectedPCFSCurve");
+                UpdateCharts();
+            }
+        }
+
+        public SeriesCollection G2SeriesCollection { get; set; }
+        public LineSeries G2LineSeries { get; set; }
+        public ChartValues<ObservablePoint> G2Points { get; set; }
+
+        public SeriesCollection PESeriesCollection { get; set; }
+        public LineSeries PELineSeries { get; set; }
+        public ChartValues<ObservablePoint> PEPoints { get; set; }
 
         //Commands
         public RelayCommand<object> OpenBinningListCommand { get; private set; }
@@ -177,6 +239,8 @@ namespace PCFS.ViewModel
         public RelayCommand<object> StartScanCommand { get; private set; }
         public RelayCommand<object> StopScanCommand { get; private set; }
 
+        public RelayCommand<ChartPoint> DataPointClickCommand { get; private set; }
+
         public MainWindowViewModel()
         {
             OnStepWidthChanged();
@@ -184,13 +248,25 @@ namespace PCFS.ViewModel
 
             //Create Scan object
             _pcfsScan = new PCFSScan(WriteLog);
+            _pcfsScan.ScanInitialized += OnScanInitialized;
 
+            //Create chart elements
+            G2Points = new ChartValues<ObservablePoint> { };
+            G2LineSeries = new LineSeries() { Values = G2Points };
+            G2SeriesCollection = new SeriesCollection();
+            G2SeriesCollection.Add(G2LineSeries);
+
+            PEPoints = new ChartValues<ObservablePoint> { };
+            PELineSeries = new LineSeries() { Values = G2Points };
+            PESeriesCollection = new SeriesCollection();
+            PESeriesCollection.Add(PELineSeries);
+           
             //Wire Relay Commands
-           OpenBinningListCommand = new RelayCommand<object>(o =>
-           {
-               OpenFileDialog of = new OpenFileDialog();
-               if (of.ShowDialog() == DialogResult.OK) BinningListFilename = of.FileName;
-           });
+            OpenBinningListCommand = new RelayCommand<object>(o =>
+            {
+                OpenFileDialog of = new OpenFileDialog();
+                if (of.ShowDialog() == DialogResult.OK) BinningListFilename = of.FileName;
+            });
 
             InitializeCommand = new RelayCommand<object>(o =>
             {
@@ -230,6 +306,27 @@ namespace PCFS.ViewModel
                 _pcfsScan.StopScan();
             });
 
+            DataPointClickCommand = new RelayCommand<ChartPoint>(OnDataPointSelected);
+
+        }
+                        
+        private void UpdateCharts()
+        {
+            if (_selectedPCFSCurve.positions == null) return;
+
+            G2Points.Clear();                     
+            G2Points.AddRange(_selectedPCFSCurve.positions.Zip(_selectedPCFSCurve.G2, (pos, g2) => new ObservablePoint(pos, g2)));
+        }
+
+        private void OnDataPointSelected(ChartPoint point)
+        {
+            SelectedDataPoint = DataPoints.Where(p => p.StagePosition == point.X).FirstOrDefault();
+        }
+        
+        private void OnScanInitialized(object sender, ScanInitializedEventArgs e)
+        {
+            DataPoints = new ObservableCollection<DataPoint>(e.DataPoints);
+            PCFSCurves = new ObservableCollection<PCFSCurve>(e.PCFSCurves);
         }
 
         private void WriteLog(string message)

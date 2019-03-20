@@ -7,7 +7,7 @@
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:PCFS"
         mc:Ignorable="d"
-        Title="PCFS Scan" Height="600" Width="800">
+        Title="PCFS Scan" Height="600" Width="1200">
     <Window.Resources>
         <vm:MainWindowViewModel x:Key="MainWindowViewModel" />
 
@@ -189,8 +189,9 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="150"/>
                 <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid.Resources>
                 <Style TargetType="lvc:CartesianChart">
@@ -199,11 +200,44 @@
                 </Style>
             </Grid.Resources>
 
-            <lvc:CartesianChart Grid.Row="0" Grid.Column="0"/>
+            <DockPanel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2">
+                <TextBlock DockPanel.Dock="top" FontWeight="bold" HorizontalAlignment="Center" Text="TimeBins"/>
+                <ListBox DockPanel.Dock="Bottom" ItemsSource="{Binding PCFSCurves, Mode=OneWay}" SelectedItem="{Binding SelectedPCFSCurve}"
+                         ScrollViewer.VerticalScrollBarVisibility="Visible">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock FontSize="10" Text="{Binding BinningString}"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
 
-            <lvc:CartesianChart Grid.Row="0" Grid.Column="1"/>
+            <lvc:CartesianChart Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
+                                Series="{Binding G2SeriesCollection}"
+                                DataClickCommand="{Binding DataPointClickCommand}">
+                <lvc:CartesianChart.AxisX>
+                    <lvc:Axis Title="Position (mm)" MinValue="0" MaxValue="300"/>
+                </lvc:CartesianChart.AxisX>
+                <lvc:CartesianChart.AxisY>
+                    <lvc:Axis Title="G2"/>
+                </lvc:CartesianChart.AxisY>
+            </lvc:CartesianChart>
 
-            <lvc:CartesianChart Grid.Row="1" Grid.Column="0"/>
+            <Border Grid.Row="1" Grid.Column="1" BorderBrush="Black" BorderThickness="1"
+                    DataContext="{Binding SelectedDataPoint}">
+                <TextBox Text="{Binding StagePosition}" />
+            </Border>
+           
+
+            <lvc:CartesianChart Grid.Row="1" Grid.Column="2"
+                                Series="{Binding PESeriesCollection}">
+                <lvc:CartesianChart.AxisX>
+                    <lvc:Axis Title="e (ueV)"/>
+                </lvc:CartesianChart.AxisX>
+                <lvc:CartesianChart.AxisY>
+                    <lvc:Axis Title="p(e)"/>
+                </lvc:CartesianChart.AxisY>
+            </lvc:CartesianChart>
         </Grid>
 
 

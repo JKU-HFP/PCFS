@@ -7,7 +7,7 @@ using TimeTagger_Library;
 
 namespace PCFS.Model
 {
-    public class PCFSPoint
+    public class DataPoint
     {
         //Private fields
         private Kurolator _PCFSCorrelator;
@@ -18,6 +18,8 @@ namespace PCFS.Model
         private byte _chan1;
 
         //Properties
+        public int Index { get; set; } = 0;
+
         public double StagePosition { get; set; }
         public double NumScans { get; set; }
         public double PerformedScans { get; private set; }
@@ -39,7 +41,7 @@ namespace PCFS.Model
         public long[] HistogramYPreview { get; private set; }
 
 
-        public PCFSPoint(BinningListHistogram binningListHistogram, ulong timeWindow)
+        public DataPoint(BinningListHistogram binningListHistogram, ulong timeWindow)
         {
             _timeBins = binningListHistogram.Binnings.Select(p => Math.Abs( p.high - p.low )).ToArray();
             _chan0 = binningListHistogram.CorrelationConfig[0].cA;

@@ -7,7 +7,18 @@ using System.Threading.Tasks;
 namespace PCFS.Model
 {
     public class PCFSCurve
-    {       
+    {
+        public (long low, long high) Binning { get; set; }
+
+        public string BinningString
+        {
+            get
+            {
+                return Binning.low.ToString() + " - " + Binning.high.ToString();
+            }
+        }
+        
+        public double[] positions { get; set; }
         public double[] G2 { get; set; }
         public double[] G2Err { get; set; }
 

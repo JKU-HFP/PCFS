@@ -79,7 +79,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Model\PCFSCurve.cs" />
-    <Compile Include="Model\PCFSPoint.cs" />
+    <Compile Include="Model\DataPoint.cs" />
     <Compile Include="Model\PCFSScan.cs" />
     <Compile Include="Model\RelayCommand.cs" />
     <Compile Include="ViewModel\MainWindowViewModel.cs" />

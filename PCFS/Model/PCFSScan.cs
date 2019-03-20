@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using MathNet.Numerics;
 using MathNet.Numerics.IntegralTransforms;
+using System.Globalization;
 
 namespace PCFS.Model
 {
@@ -19,7 +20,7 @@ namespace PCFS.Model
         //Private fields
         private Action<string> _loggerCallback;
 
-        private List<PCFSPoint> _PCFSPoints;
+        private List<DataPoint> _DataPoints;
         private List<PCFSCurve> _PCFSCurves;
 
         private List<(byte ch0, byte ch1)> _corrConfig;
@@ -31,6 +32,8 @@ namespace PCFS.Model
         private BackgroundWorker _scanBgWorker;
         private Stopwatch _stopwatch;
 
+        DirectoryInfo _dataPointsDirectory;
+
         //#################################
         // P R O P E R T I E S
         //#################################
@@ -40,6 +43,7 @@ namespace PCFS.Model
         public bool ScanPointsInitialized { get; private set; } = false;
         public bool DataAvailable { get; private set; } = false;
         public int RepetionsDone { get; private set; } = 0;
+        public DateTime ScanStartTime;
 
         //TimeTagger
         public byte chan0 { get; set; } = 0;
@@ -63,11 +67,17 @@ namespace PCFS.Model
         //#################################
         // E V E N T S
         //#################################
-
-        public event EventHandler<PCFSCalculatedEventArgs> PCFSCalculated;
-        private void OnPCFSCalculated(PCFSCalculatedEventArgs e)
+        public event EventHandler<ScanInitializedEventArgs> ScanInitialized;
+        private void OnScanInitialized(ScanInitializedEventArgs e)
         {
-            PCFSCalculated?.Invoke(this, e);
+            ScanInitialized?.Invoke(this, e);
+        }
+
+
+        public event EventHandler<DataChangedEventArgs> DataChanged;
+        private void OnDataChanged(DataChangedEventArgs e)
+        {
+            DataChanged?.Invoke(this, e);
         }
 
 
@@ -75,7 +85,7 @@ namespace PCFS.Model
         {  
             _loggerCallback = loggercallback;
 
-            _PCFSPoints = new List<PCFSPoint> { };
+            _DataPoints = new List<DataPoint> { };
 
             _linearStage = new PI_GCS2_Stage(_loggerCallback);
             _linearStage.Connect("C - 863");
@@ -110,13 +120,24 @@ namespace PCFS.Model
             for (int i=0; i<NumSteps; i++)
             {
                 BinningListHistogram hist = new BinningListHistogram(_corrConfig, _binningList, (ulong)TimeWindow);
-                _PCFSPoints.Add(new PCFSPoint(hist, (ulong)TimeWindow)
+                _DataPoints.Add(new DataPoint(hist, (ulong)TimeWindow)
                 {
+                    Index = i,
                     StagePosition = MinPosition + i * StepWidth,
                     NumScans = NumRepetitions,
                     OffsetCh1 = Offset
                 });               
             }
+
+            //Initialize PCFS Curves
+
+            _PCFSCurves = new List<PCFSCurve>();
+            foreach(var bin in _binningList)
+            {
+                _PCFSCurves.Add(new PCFSCurve() { Binning = bin });
+            }
+
+            OnScanInitialized(new ScanInitializedEventArgs(_DataPoints,_PCFSCurves));
 
             ScanPointsInitialized = true;
         }
@@ -130,7 +151,7 @@ namespace PCFS.Model
             {
                 string[] tmp_string = line.Split(',');
                           
-                if (tmp_string.Length != 2)
+                if (tmp_string.Length == 2)
                 {
                     if(long.TryParse(tmp_string[0], out long lower) && long.TryParse(tmp_string[1], out long higher))
                     {
@@ -168,6 +189,10 @@ namespace PCFS.Model
 
             DataAvailable = true;
             ScanPointsInitialized = false;
+
+            ScanStartTime = DateTime.Now;
+            _dataPointsDirectory = Directory.CreateDirectory("DataPoints_"+ScanStartTime.ToString("yyyy’_‘MM’_‘dd’_’HH’_’mm"));
+
             _scanBgWorker.RunWorkerAsync();
         }
 
@@ -175,7 +200,7 @@ namespace PCFS.Model
         {
             while(RepetionsDone < NumRepetitions)
             {
-                foreach(PCFSPoint pcfsPoint in _PCFSPoints)
+                foreach(DataPoint pcfsPoint in _DataPoints)
                 {
                     if (e.Cancel) return;
 
@@ -209,39 +234,55 @@ namespace PCFS.Model
             }
         }
 
-        private async void ProcessDataAsync(PCFSPoint currPoint, List<TimeTags> tt, long totaltime)
+        private async void ProcessDataAsync(DataPoint currPoint, List<TimeTags> tt, long totaltime)
         {
             await Task.Run(() =>
             {
                 currPoint.AddMeasurement(tt, totaltime);
+                WriteDataPoint(currPoint);
                 CalculatePCFS();
             });
 
-            OnPCFSCalculated(new PCFSCalculatedEventArgs(_PCFSPoints, _PCFSCurves));
+            OnDataChanged(new DataChangedEventArgs(_DataPoints, _PCFSCurves));
         }
-        
+
+        private void WriteDataPoint(DataPoint dp)
+        {
+            int numLines = dp.HistogramX.Length;
+            string fF = "F3";
+            CultureInfo cult = CultureInfo.InvariantCulture;
+
+            string[] outputLines = new string[numLines + 1];
+
+
+            outputLines[0] = "Tau \t Coinc \t CoincErr \t G2 \t G2Err";
+            for(int i=0; i<numLines; i++)
+            {
+                outputLines[i + 1] = dp.HistogramX[i].ToString() + "\t" + dp.HistogramY[i].ToString() + "\t" + dp.HistogramYErr[i].ToString(fF, cult) + "\t" +
+                                     dp.HistogramYNorm[i].ToString(fF, cult) + "\t" + dp.HistogramYNormErr[i].ToString(fF, cult);   
+            }
+
+            string filename = Path.Combine(_dataPointsDirectory.ToString(), "Point_+" + dp.Index +".dat");
+            File.WriteAllLines(filename, outputLines);
+        }
+
         private void CalculatePCFS()
         {
             //Get G2 Data
-            int numBins = _binningList.Count;
-
-            _PCFSCurves = new List<PCFSCurve> { };
-            IEnumerable<PCFSPoint> relevantPoints = _PCFSPoints.Where(p => p.PerformedScans > 0);
+            IEnumerable<DataPoint> relevantPoints = _DataPoints.Where(p => p.PerformedScans > 0);
 
             //Calculate energy scale
             double[] positions = relevantPoints.Select(p => p.StagePosition).ToArray();
             double eScaleFactor = 299792458.0 * 2 * Math.PI / (positions.Length * StepWidth);
             double[] energyScale = positions.Select(p => p * eScaleFactor).ToArray();
 
+            int numBins = _binningList.Count;
             for (int i=0; i<numBins; i++)
             {
-                PCFSCurve curve = new PCFSCurve()
-                {
-                    Energy = energyScale,
-                    G2 = relevantPoints.Select(p => p.HistogramYNorm[i]).ToArray(),
-                    G2Err = relevantPoints.Select(p => p.HistogramYNormErr[i]).ToArray()
-                };
-                _PCFSCurves.Add(curve);         
+                _PCFSCurves[i].positions = positions;
+                _PCFSCurves[i].Energy = energyScale;
+                _PCFSCurves[i].G2 = relevantPoints.Select(p => p.HistogramYNorm[i]).ToArray();
+                _PCFSCurves[i].G2Err = relevantPoints.Select(p => p.HistogramYNormErr[i]).ToArray();  
             }
 
             //Calculate Fourier Transforms
@@ -285,6 +326,19 @@ namespace PCFS.Model
         }
     }
 
+
+    public class  ScanInitializedEventArgs
+    {
+        public List<PCFSCurve> PCFSCurves { get; }
+        public List<DataPoint> DataPoints { get; }
+
+        public ScanInitializedEventArgs(List<DataPoint> datapoints, List<PCFSCurve> pcfscurves)
+        {
+            DataPoints = datapoints;
+            PCFSCurves = pcfscurves;
+        }
+    }
+
     public class ScanProgressChangedEventArgs
     {
         public ScanProgressChangedEventArgs()
@@ -293,14 +347,14 @@ namespace PCFS.Model
         }
     }
 
-    public class PCFSCalculatedEventArgs
+    public class DataChangedEventArgs
     {
-        public List<PCFSPoint> PCFSPoints { get; }
+        public List<DataPoint> DataPoints { get; }
         public List<PCFSCurve> PCFSCurves { get; }
 
-        public PCFSCalculatedEventArgs(List<PCFSPoint> pcfspoints, List<PCFSCurve> pcfscurves)
+        public DataChangedEventArgs(List<DataPoint> pcfspoints, List<PCFSCurve> pcfscurves)
         {
-            PCFSPoints = pcfspoints;
+            DataPoints = pcfspoints;
             PCFSCurves = pcfscurves;
         }
 
