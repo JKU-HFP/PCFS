@@ -78,8 +78,9 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Model\PCFSCurve.cs" />
+    <Compile Include="ILinearStage.cs" />
     <Compile Include="Model\DataPoint.cs" />
+    <Compile Include="Model\PCFSCurve.cs" />
     <Compile Include="Model\PCFSScan.cs" />
     <Compile Include="Model\RelayCommand.cs" />
     <Compile Include="ViewModel\MainWindowViewModel.cs" />
