@@ -65,6 +65,8 @@ namespace PCFS.Model
         public int NumRepetitions { get; set; } = 4;
         public string BinningListFilename { get; set; } = "";
 
+        public int CurrentStep { get; private set; } = 0;
+
         //#################################
         // E V E N T S
         //#################################
@@ -101,7 +103,7 @@ namespace PCFS.Model
             _timeTagger = new SimulatedTagger(_loggerCallback)
             {
                 PacketSize = 1000,
-                FileName = @"C:\Users\Christian\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
+                FileName = @"E:\Dropbox\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
                 PacketDelayTimeMilliSeonds = 1000
             };
             
@@ -206,6 +208,7 @@ namespace PCFS.Model
             DataAvailable = true;
             ScanPointsInitialized = false;
             ScanInProgress = true;
+            CurrentStep = 0;
 
             ScanStartTime = DateTime.Now;
             _dataPointsDirectory = Directory.CreateDirectory("DataPoints_"+ScanStartTime.ToString("yyyy_MM_dd_HH_mm"));
@@ -236,6 +239,7 @@ namespace PCFS.Model
                     _linearStage.SetVelocity(SlowVelocity);
                     _linearStage.Move_Relative(SlowVelocity * IntegrationTime);
                     _stopwatch.Restart();
+                    _timeTagger.BackupFilename = "TTTRBackup_Step"+CurrentStep.ToString();
                     _timeTagger.StartCollectingTimeTagsAsync();
 
                     //Wait for stage to arrive at target position
@@ -249,6 +253,8 @@ namespace PCFS.Model
                     //Report progress
                     ScanProgressChangedEventArgs scanprogress = new ScanProgressChangedEventArgs();
                     _scanBgWorker.ReportProgress(0, scanprogress);
+
+                    CurrentStep++;
                 }
                 RepetionsDone++;
             }
