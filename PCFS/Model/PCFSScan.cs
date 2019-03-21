@@ -59,13 +59,26 @@ namespace PCFS.Model
         //Aquisition
         public double MinPosition { get; set; } = 0;
         public double MaxPosition { get; set; } = 300.0;
-        public double NumSteps { get; set; } = 240;
+        public int NumSteps { get; set; } = 240;
         public double StepWidth { get; private set; } = 0.0;
         public double IntegrationTime { get; set; } = 10.0;
         public int NumRepetitions { get; set; } = 4;
         public string BinningListFilename { get; set; } = "";
 
         public int CurrentStep { get; private set; } = 0;
+        public int Totalsteps
+        {
+            get { return NumRepetitions * NumSteps; }
+        }
+
+
+        //Static Getters
+        public static TimeSpan GetEstimatedTime(int donesteps, int totalNumsteps, double integrationtime)
+        {
+            int timeSeconds = (int)((totalNumsteps - donesteps) * integrationtime * 1.125);
+            return new TimeSpan(0, 0, timeSeconds);
+        }
+        
 
         //#################################
         // E V E N T S
@@ -83,6 +96,12 @@ namespace PCFS.Model
             DataChanged?.Invoke(this, e);
         }
 
+        public event EventHandler<ScanProgressChangedEventArgs> ScanProgressChanged;
+        private void OnScanProgressChanged(ScanProgressChangedEventArgs e)
+        {
+            ScanProgressChanged?.Invoke(this, e);
+        }
+        
 
         public PCFSScan(Action<string> loggercallback)
         {  
@@ -113,7 +132,7 @@ namespace PCFS.Model
             _scanBgWorker.WorkerReportsProgress = true;
             _scanBgWorker.WorkerSupportsCancellation = true;
             _scanBgWorker.DoWork += DoScan;
-            _scanBgWorker.ProgressChanged += ScanProgressChanged;
+            _scanBgWorker.ProgressChanged += BgwScanProgressChanged;
             _scanBgWorker.RunWorkerCompleted += ScanCompleted;
 
             _stopwatch = new Stopwatch();
@@ -124,6 +143,7 @@ namespace PCFS.Model
             if(!File.Exists(BinningListFilename))
             {
                 WriteLog("Binning list file does not exist.");
+                return;
             }
             _binningList = GetBinningList(BinningListFilename);
             
@@ -162,7 +182,8 @@ namespace PCFS.Model
 
         private List<(long low, long high)> GetBinningList(string filename)
         {
-            List<(long low, long high)> bins = new List<(long low, long high)> { };
+            List<(long low, long high)> bins = new List<(long low, long high)> { };             
+                        
             string[] lines = File.ReadAllLines(filename);
             
             foreach(string line in lines)
@@ -224,6 +245,15 @@ namespace PCFS.Model
             {
                 foreach(DataPoint pcfsPoint in _DataPoints)
                 {
+                    //ReportProgress
+                    _scanBgWorker.ReportProgress(0,new ScanProgressChangedEventArgs()
+                    {
+                        CurrentStep = CurrentStep,
+                        TotalSteps = Totalsteps,
+                        StagePosition = pcfsPoint.StagePosition,
+                        RemainingTime = GetEstimatedTime(CurrentStep, Totalsteps, IntegrationTime)
+                    });
+
                     if (_scanBgWorker.CancellationPending) return;
 
                     //Stop tagger and clear buffer
@@ -239,7 +269,7 @@ namespace PCFS.Model
                     _linearStage.SetVelocity(SlowVelocity);
                     _linearStage.Move_Relative(SlowVelocity * IntegrationTime);
                     _stopwatch.Restart();
-                    _timeTagger.BackupFilename = "TTTRBackup_Step"+CurrentStep.ToString();
+                    _timeTagger.BackupFilename = "TTTRBackup_Step"+CurrentStep.ToString()+".ht2";
                     _timeTagger.StartCollectingTimeTagsAsync();
 
                     //Wait for stage to arrive at target position
@@ -249,10 +279,6 @@ namespace PCFS.Model
 
                     //ASYNCHRONOUSLY PROCESS DATA
                     ProcessDataAsync(pcfsPoint, _timeTagger.GetAllTimeTags(), _stopwatch.ElapsedMilliseconds * 1000000000);
-
-                    //Report progress
-                    ScanProgressChangedEventArgs scanprogress = new ScanProgressChangedEventArgs();
-                    _scanBgWorker.ReportProgress(0, scanprogress);
 
                     CurrentStep++;
                 }
@@ -324,9 +350,10 @@ namespace PCFS.Model
 
         }
 
-        private void ScanProgressChanged(object sender, ProgressChangedEventArgs e)
+        private void BgwScanProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             ScanProgressChangedEventArgs scanprogress = (ScanProgressChangedEventArgs) e.UserState;
+            OnScanProgressChanged(scanprogress);
         }
 
         private void ScanCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -369,6 +396,11 @@ namespace PCFS.Model
 
     public class ScanProgressChangedEventArgs
     {
+        public int CurrentStep { get; set; } = 0;
+        public int TotalSteps { get; set; } = 0;
+        public double StagePosition { get; set; } = 0;
+        public TimeSpan RemainingTime { get; set; } = new TimeSpan(0);
+
         public ScanProgressChangedEventArgs()
         {
 

@@ -151,7 +151,8 @@ namespace PCFS.ViewModel
         public TimeSpan EstimatedTotalTime { get; private set; }
         private void OnEstimatedTotalTimeChanged()
         {
-            EstimatedTotalTime = new TimeSpan(0, 0, (int)(NumSteps*IntegrationTime*Repetitions*1.125));
+            //EstimatedTotalTime = new TimeSpan(0, 0, (int)(NumSteps*IntegrationTime*Repetitions*1.125));
+            EstimatedTotalTime = PCFSScan.GetEstimatedTime(0, NumSteps * Repetitions, IntegrationTime);
             OnPropertyChanged("EstimatedTotalTime");
         }
                
@@ -232,6 +233,41 @@ namespace PCFS.ViewModel
         public LineSeries PELineSeries { get; set; }
         public ChartValues<ObservablePoint> PEPoints { get; set; }
 
+        //Status
+        private string _step;
+        public string Step
+        {
+            get { return _step; }
+            set
+            {
+                _step = value;
+                OnPropertyChanged("Step");
+            }
+        }
+
+        private string _stagePosition;
+        public string StagePosition
+        {
+            get { return _stagePosition; }
+            set
+            {
+                _stagePosition = value;
+                OnPropertyChanged("StagePosition");
+            }
+        }
+
+        private string _remainingTime;
+        public string RemainingTime
+        {
+            get { return _remainingTime; }
+            set
+            {
+                _remainingTime = value;
+                OnPropertyChanged("RemainingTime");
+            }
+        }
+
+
         //Commands
         public RelayCommand<object> OpenBinningListCommand { get; private set; }
 
@@ -250,6 +286,7 @@ namespace PCFS.ViewModel
             _pcfsScan = new PCFSScan(WriteLog);
             _pcfsScan.ScanInitialized += OnScanInitialized;
             _pcfsScan.DataChanged += OnDataChanged;
+            _pcfsScan.ScanProgressChanged += OnScanProgressChanged;
 
             //Create chart elements
             G2Points = new ChartValues<ObservablePoint> { };
@@ -272,6 +309,9 @@ namespace PCFS.ViewModel
             InitializeCommand = new RelayCommand<object>(
             o =>
             {
+                G2Points.Clear();
+                PEPoints.Clear();
+
                 _pcfsScan.chan0 = Chan0;
                 _pcfsScan.chan1 = Chan1;
                 _pcfsScan.Offset = Offset;
@@ -313,6 +353,7 @@ namespace PCFS.ViewModel
                         
         private void UpdateCharts()
         {
+            if (_selectedPCFSCurve == null) return;
             if (_selectedPCFSCurve.positions == null) return;
 
             G2Points.Clear();                     
@@ -320,6 +361,13 @@ namespace PCFS.ViewModel
 
             PEPoints.Clear();
             PEPoints.AddRange(_selectedPCFSCurve.Energy.Zip(_selectedPCFSCurve.pE, (e, pe) => new ObservablePoint(e, pe)));
+        }
+
+        private void OnScanProgressChanged(object sender, ScanProgressChangedEventArgs e)
+        {
+            Step = e.CurrentStep.ToString() + " / " + e.TotalSteps.ToString();
+            StagePosition = e.StagePosition.ToString()+" mm";
+            RemainingTime = e.RemainingTime.ToString("hh\\:mm\\:ss");
         }
 
         private void OnDataPointSelected(ChartPoint point)
@@ -333,6 +381,10 @@ namespace PCFS.ViewModel
             PCFSCurves = new ObservableCollection<PCFSCurve>(e.PCFSCurves);
 
             _selectedPCFSCurve = PCFSCurves[0];
+
+            Step = "";
+            StagePosition = "";
+            RemainingTime = "";
         }
 
         private void OnDataChanged(object sender, DataChangedEventArgs e)
