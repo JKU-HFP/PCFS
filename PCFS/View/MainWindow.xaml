@@ -12,6 +12,8 @@
     <Window.Resources>
         <vm:MainWindowViewModel x:Key="MainWindowViewModel" />
         <conv:LongToTimeSpanConverter x:Key="LongToTimeSpanConv" />
+
+        <SolidColorBrush x:Key="BackGroundColor" Color="LightGray"/>
     </Window.Resources>
 
     <Grid DataContext="{StaticResource MainWindowViewModel}">
@@ -32,7 +34,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- PROPERTY SECTION -->
-        <ScrollViewer Grid.Row="1" Grid.RowSpan="3" Grid.Column="1" Background="LightGray" 
+        <ScrollViewer Grid.Row="1" Grid.RowSpan="3" Grid.Column="1" Background="{StaticResource BackGroundColor}" 
                       BorderThickness="1" BorderBrush="Black" VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Auto">
 
@@ -179,7 +181,7 @@
         </ScrollViewer>
 
         <!-- STATUS BAR -->
-        <Grid Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="3"  Background="LightGray">
+        <Grid Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="3"  Background="{StaticResource BackGroundColor}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
@@ -341,8 +343,8 @@
 
 
         <!-- MESSAGE AREA -->
-        <Border Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="3" BorderBrush="Black" Background="LightGray">
-            <ScrollViewer VerticalScrollBarVisibility="auto" Margin="5">
+        <Border Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="3" BorderBrush="Black" Background="{StaticResource BackGroundColor}">
+            <ScrollViewer VerticalScrollBarVisibility="auto" Margin="0,5,0,5">
                 <TextBox Text="{Binding Messages}"/>
             </ScrollViewer>
         </Border>
