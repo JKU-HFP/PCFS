@@ -82,6 +82,7 @@
     <Compile Include="Model\PCFSCurve.cs" />
     <Compile Include="Model\PCFSScan.cs" />
     <Compile Include="Model\RelayCommand.cs" />
+    <Compile Include="ViewModel\Converters\LongToTimeSpanConverter.cs" />
     <Compile Include="ViewModel\MainWindowViewModel.cs" />
     <Compile Include="ViewModel\ViewModelBase.cs" />
     <Compile Include="View\MainWindow.xaml.cs">

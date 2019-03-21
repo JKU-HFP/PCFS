@@ -28,6 +28,10 @@ namespace PCFS.Model
         public long TotalTime { get; private set; } = 0;
         public long TotalCountsCh0 { get; private set; } = 0;
         public long TotalCountsCh1 { get; private set; } = 0;
+        public long TotalCounts
+        {
+            get => TotalCountsCh0 + TotalCountsCh1;
+        }
 
         public double NormalizationFactor { get; private set; } = 1.0;
 
@@ -51,9 +55,9 @@ namespace PCFS.Model
             _PCFSCorrelator = new Kurolator(new List<CorrelationGroup> { binningListHistogram }, timeWindow);
 
             //Setup G2 Preview Correlator
-            ulong previewTimeWindow = 1000000;
+            ulong previewTimeWindow = 100000;
 
-            Histogram g2previewGroup = new Histogram(binningListHistogram.CorrelationConfig, previewTimeWindow);
+            Histogram g2previewGroup = new Histogram(binningListHistogram.CorrelationConfig, previewTimeWindow, 512);
             _G2PreviewCorrelator = new Kurolator(new List<CorrelationGroup> { g2previewGroup }, previewTimeWindow);
 
             HistogramX = _PCFSCorrelator[0].Histogram_X;
@@ -87,7 +91,7 @@ namespace PCFS.Model
             HistogramYNorm = HistogramY.Zip(_timeBins, (yval, bin) => yval * (NormalizationFactor / bin) ).ToArray();
             HistogramYNormErr = HistogramYErr.Zip(_timeBins, (yval, bin) => yval * (NormalizationFactor / bin)).ToArray();
 
-            HistogramXPreview = _G2PreviewCorrelator[0].Histogram_Y;
+            HistogramYPreview = _G2PreviewCorrelator[0].Histogram_Y;
 
             PerformedScans++;
         }

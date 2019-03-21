@@ -19,6 +19,7 @@ namespace PCFS.ViewModel
     {
         //Private fields
         PCFSScan _pcfsScan;
+        Timer _CountrateTimer;
 
         //#########################
         // P R O P E R T I E S
@@ -229,11 +230,37 @@ namespace PCFS.ViewModel
         public LineSeries G2LineSeries { get; set; }
         public ChartValues<ObservablePoint> G2Points { get; set; }
 
+        public SeriesCollection PreviewSeriesCollection { get; set; }
+        public LineSeries PreviewLineSeries { get; set; }
+        public ChartValues<ObservablePoint> PreviewPoints { get; set; }
+
         public SeriesCollection PESeriesCollection { get; set; }
         public LineSeries PELineSeries { get; set; }
         public ChartValues<ObservablePoint> PEPoints { get; set; }
 
         //Status
+        private string _CountrateCh0;
+        public string CountrateCh0
+        {
+            get { return _CountrateCh0; }
+            set
+            {
+                _CountrateCh0 = value;
+                OnPropertyChanged("CountrateCh0");
+            }
+        }
+
+        private string _CountrateCh1;
+        public string CountrateCh1
+        {
+            get { return _CountrateCh1; }
+            set
+            {
+                _CountrateCh1 = value;
+                OnPropertyChanged("CountrateCh1");
+            }
+        }
+
         private string _step;
         public string Step
         {
@@ -290,12 +317,27 @@ namespace PCFS.ViewModel
 
             //Create chart elements
             G2Points = new ChartValues<ObservablePoint> { };
-            G2LineSeries = new LineSeries() { Values = G2Points };
+            G2LineSeries = new LineSeries()
+            {
+                Values = G2Points,           
+            };
             G2SeriesCollection = new SeriesCollection();
             G2SeriesCollection.Add(G2LineSeries);
 
+            PreviewPoints = new ChartValues<ObservablePoint> { };
+            PreviewLineSeries = new LineSeries()
+            {
+                Values = PreviewPoints,
+               PointGeometry = null
+            };
+            PreviewSeriesCollection = new SeriesCollection();
+            PreviewSeriesCollection.Add(PreviewLineSeries);
+
             PEPoints = new ChartValues<ObservablePoint> { };
-            PELineSeries = new LineSeries() { Values = PEPoints };
+            PELineSeries = new LineSeries()
+            {
+                Values = PEPoints
+            };
             PESeriesCollection = new SeriesCollection();
             PESeriesCollection.Add(PELineSeries);
            
@@ -349,8 +391,20 @@ namespace PCFS.ViewModel
 
             DataPointClickCommand = new RelayCommand<ChartPoint>(OnDataPointSelected);
 
+
+            //Setup timer
+            _CountrateTimer = new Timer();
+            _CountrateTimer.Interval = 1000;
+            _CountrateTimer.Tick += (sender, e) =>
+            {
+                CountrateCh0 = _pcfsScan.CountrateChan0.ToString("0.###E+00");
+                CountrateCh1 = _pcfsScan.CountrateChan1.ToString("0.###E+00");
+            };
+            _CountrateTimer.Enabled = true;
+
         }
-                        
+         
+
         private void UpdateCharts()
         {
             if (_selectedPCFSCurve == null) return;
@@ -372,7 +426,19 @@ namespace PCFS.ViewModel
 
         private void OnDataPointSelected(ChartPoint point)
         {
+            if (point == null) return;
+
             SelectedDataPoint = DataPoints.Where(p => p.StagePosition == point.X).FirstOrDefault();
+
+            if (SelectedDataPoint != null)
+            {
+                if(SelectedDataPoint.HistogramXPreview !=null)
+                {
+                    PreviewPoints.Clear();
+                    PreviewPoints.AddRange(SelectedDataPoint.HistogramXPreview.Zip(SelectedDataPoint.HistogramYPreview, (X, Y) => new ObservablePoint(X/1000.0, Y)));
+                }
+            }
+    
         }
         
         private void OnScanInitialized(object sender, ScanInitializedEventArgs e)
@@ -394,7 +460,7 @@ namespace PCFS.ViewModel
 
         private void WriteLog(string message)
         {
-            Messages = message + "\n" + Messages;
+            Messages = DateTime.Now.ToString("HH:mm:ss")+" "+message + "\n" + Messages;
         }
     }
 }

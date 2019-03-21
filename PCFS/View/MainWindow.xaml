@@ -5,13 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:PCFS.ViewModel"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+        xmlns:conv="clr-namespace:PCFS.ViewModel.Converters"
         xmlns:local="clr-namespace:PCFS"
         mc:Ignorable="d"
         Title="PCFS Scan" Height="800" Width="1200">
     <Window.Resources>
         <vm:MainWindowViewModel x:Key="MainWindowViewModel" />
-
-
+        <conv:LongToTimeSpanConverter x:Key="LongToTimeSpanConv" />
     </Window.Resources>
 
     <Grid DataContext="{StaticResource MainWindowViewModel}">
@@ -184,12 +184,36 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="400"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
+            <Grid Grid.Row="0" Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           FontWeight="Bold" Text="Countrate Channel 0"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           FontWeight="Bold" FontSize="20" Text="{Binding CountrateCh0}"/>
+
+
+                <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           FontWeight="Bold" Text="Countrate Channel 1"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           FontWeight="Bold" FontSize="20" Text="{Binding CountrateCh1}"/>
+
+            </Grid>
+            
             <!-- Scan Progress-->
-            <Grid Margin="5" Grid.Row="0" Grid.Column="1">
+            <Grid Margin="5" Grid.Row="0" Grid.Column="3">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -222,7 +246,7 @@
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="150"/>
-                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="300"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid.Resources>
@@ -255,14 +279,54 @@
                 </lvc:CartesianChart.AxisY>
             </lvc:CartesianChart>
 
-            <Border Grid.Row="1" Grid.Column="1" BorderBrush="Black" BorderThickness="1"
-                    DataContext="{Binding SelectedDataPoint}">
-                <StackPanel Orientation="Vertical">
-                    <TextBox IsReadOnly="True" Text="{Binding StagePosition}" />
-                    <TextBox IsReadOnly="True" Text="{Binding PerformedScans, Mode=OneWay}" />
-                </StackPanel>
-            </Border>
+            
+            
+            <Border Grid.Row="1" Grid.Column="1" BorderBrush="Black" BorderThickness="1" >
+                <DockPanel Margin="5" LastChildFill="True">
+                    <Grid DockPanel.Dock="Top" DataContext="{Binding SelectedDataPoint}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="140" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
 
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Index:"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Index}"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Position:"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding StagePosition}" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Performed Scans:"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding PerformedScans, Mode=OneWay}" />
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Total Integration Time"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding TotalTime, Mode=OneWay, Converter={StaticResource LongToTimeSpanConv}, ConverterParameter=1000000000}"/>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Total Counts"/>
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding TotalCounts, Mode=OneWay}" />
+                                   
+                    </Grid>
+
+                    <lvc:CartesianChart Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" DockPanel.Dock="Bottom"
+                                    Series="{Binding PreviewSeriesCollection}">
+                        <lvc:CartesianChart.AxisX>
+                            <lvc:Axis Title="Position (mm)" MinValue="-20" MaxValue="20" />
+                        </lvc:CartesianChart.AxisX>
+                        <lvc:CartesianChart.AxisY>
+                            <lvc:Axis Title="Coincidences"/>
+                        </lvc:CartesianChart.AxisY>
+                    </lvc:CartesianChart>
+
+                </DockPanel>
+            </Border>
+            
+                   
 
             <lvc:CartesianChart Grid.Row="1" Grid.Column="2"
                                 Series="{Binding PESeriesCollection}">

@@ -51,6 +51,8 @@ namespace PCFS.Model
         public byte chan1 { get; set; } = 1;
         public long Offset { get; set; } = 0;
         public long TimeWindow { get; private set; } = 0;
+        public int CountrateChan0 { get => _timeTagger.GetCountrate()[chan0]; }
+        public int CountrateChan1 { get => _timeTagger.GetCountrate()[chan1]; }
 
         //Linear Stage
         public double SlowVelocity { get; set; } = 0.005;
@@ -123,7 +125,7 @@ namespace PCFS.Model
             {
                 PacketSize = 1000,
                 FileName = @"E:\Dropbox\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
-                PacketDelayTimeMilliSeonds = 1000
+                PacketDelayTimeMilliSeonds = 100
             };
             
             //==============================================
@@ -372,7 +374,7 @@ namespace PCFS.Model
 
         public void StopScan()
         {
-            _scanBgWorker.CancelAsync();
+           if(_scanBgWorker.IsBusy) _scanBgWorker.CancelAsync();
         }
 
         private void WriteLog(string message)
