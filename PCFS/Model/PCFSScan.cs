@@ -51,8 +51,6 @@ namespace PCFS.Model
         public byte chan1 { get; set; } = 1;
         public long Offset { get; set; } = 0;
         public long TimeWindow { get; private set; } = 0;
-        public int CountrateChan0 { get => _timeTagger.GetCountrate()[chan0]; }
-        public int CountrateChan1 { get => _timeTagger.GetCountrate()[chan1]; }
 
         //Linear Stage
         public double SlowVelocity { get; set; } = 0.005;
@@ -74,13 +72,23 @@ namespace PCFS.Model
         }
 
 
-        //Static Getters
+        //Getters
         public static TimeSpan GetEstimatedTime(int donesteps, int totalNumsteps, double integrationtime)
         {
             int timeSeconds = (int)((totalNumsteps - donesteps) * integrationtime * 1.125);
             return new TimeSpan(0, 0, timeSeconds);
         }
-        
+       
+        public (int counts0, int counts1) GetCountrates()
+        {
+            List<int> tmp_counts = _timeTagger.GetCountrate();
+            (int counts0, int counts1) counts = (0, 0);
+
+            counts.counts0 = chan0 < tmp_counts.Count ? tmp_counts[chan0] : 0;
+            counts.counts1 = chan1 < tmp_counts.Count ? tmp_counts[chan1] : 0;
+
+            return counts;
+        }
 
         //#################################
         // E V E N T S
@@ -111,23 +119,23 @@ namespace PCFS.Model
 
             _DataPoints = new List<DataPoint> { };
             _PCFSCurves = new List<PCFSCurve>();
+            
+
+            _linearStage = new PI_GCS2_Stage(_loggerCallback);
+            _linearStage.Connect("C-863");
+
+            _timeTagger = new HydraHarpTagger(_loggerCallback);
 
             //================ Simulations ================
+            //_linearStage = new SimulatedLinearStage();
 
-            //_linearStage = new PI_GCS2_Stage(_loggerCallback);
-            //_linearStage.Connect("C - 863");
+            //_timeTagger = new SimulatedTagger(_loggerCallback)
+            //{
+            //    PacketSize = 1000,
+            //    FileName = @"E:\Dropbox\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
+            //    PacketDelayTimeMilliSeonds = 500
+            //};
 
-            //_timeTagger = new HydraHarpTagger(_loggerCallback);
-
-            _linearStage = new SimulatedLinearStage();
-
-            _timeTagger = new SimulatedTagger(_loggerCallback)
-            {
-                PacketSize = 1000,
-                FileName = @"E:\Dropbox\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
-                PacketDelayTimeMilliSeonds = 500
-            };
-            
             //==============================================
 
             _scanBgWorker = new BackgroundWorker();
@@ -216,7 +224,19 @@ namespace PCFS.Model
 
         public void StartScanAsync()
         {
-            if(!ScanPointsInitialized)
+            if(!_timeTagger.CanCollect)
+            {
+                WriteLog("Timetagger not ready. Aborting...");
+                return;
+            }
+
+            if (!_linearStage.ControllerReady)
+            {
+                WriteLog("Linear Stage not ready. Aborting...");
+                return;
+            }
+
+            if (!ScanPointsInitialized)
             {
                 WriteLog("Scanning not initialized. Aborting...");
                 return;
@@ -247,6 +267,8 @@ namespace PCFS.Model
             {
                 foreach(DataPoint pcfsPoint in _DataPoints)
                 {
+                    if (_scanBgWorker.CancellationPending) return;
+
                     //ReportProgress
                     _scanBgWorker.ReportProgress(0,new ScanProgressChangedEventArgs()
                     {
@@ -256,8 +278,7 @@ namespace PCFS.Model
                         RemainingTime = GetEstimatedTime(CurrentStep, Totalsteps, IntegrationTime)
                     });
 
-                    if (_scanBgWorker.CancellationPending) return;
-
+               
                     //Stop tagger and clear buffer
                     _timeTagger.StopCollectingTimeTags();
                     _timeTagger.ClearTimeTagBuffer();                    
@@ -278,7 +299,7 @@ namespace PCFS.Model
                     _linearStage.WaitForPos();
                     _stopwatch.Stop();
                     _timeTagger.StopCollectingTimeTags();
-
+                    
                     //ASYNCHRONOUSLY PROCESS DATA
                     ProcessDataAsync(pcfsPoint, _timeTagger.GetAllTimeTags(), _stopwatch.ElapsedMilliseconds * 1000000000);
 

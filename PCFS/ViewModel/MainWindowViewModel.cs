@@ -398,8 +398,9 @@ namespace PCFS.ViewModel
             _CountrateTimer.Interval = 1000;
             _CountrateTimer.Tick += (sender, e) =>
             {
-                CountrateCh0 = _pcfsScan.CountrateChan0.ToString("0.###E+00");
-                CountrateCh1 = _pcfsScan.CountrateChan1.ToString("0.###E+00");
+                (int c0, int c1) counts = _pcfsScan.GetCountrates();
+                CountrateCh0 = counts.c0.ToString("0.###E+00");
+                CountrateCh1 = counts.c1.ToString("0.###E+00");
             };
             _CountrateTimer.Enabled = true;
 
@@ -470,7 +471,7 @@ namespace PCFS.ViewModel
 
             PEPoints.Clear();
             PEPoints.AddRange(_selectedPCFSCurve.Energy.Skip(1).Reverse().Zip(_selectedPCFSCurve.pE.Skip(1).Reverse(), (e, pe) => new ObservablePoint(-e, pe)));
-            PEPoints.AddRange(_selectedPCFSCurve.Energy.Zip(_selectedPCFSCurve.pE, (e, pe) => new ObservablePoint(e, pe)));
+            PEPoints.AddRange(_selectedPCFSCurve.Energy.Skip(1).Zip(_selectedPCFSCurve.pE.Skip(1), (e, pe) => new ObservablePoint(e, pe)));
             
         }
 
