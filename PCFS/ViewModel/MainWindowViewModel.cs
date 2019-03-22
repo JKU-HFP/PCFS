@@ -328,7 +328,7 @@ namespace PCFS.ViewModel
             PreviewLineSeries = new LineSeries()
             {
                 Values = PreviewPoints,
-               PointGeometry = null
+                PointGeometry = null
             };
             PreviewSeriesCollection = new SeriesCollection();
             PreviewSeriesCollection.Add(PreviewLineSeries);
@@ -336,6 +336,7 @@ namespace PCFS.ViewModel
             PEPoints = new ChartValues<ObservablePoint> { };
             PELineSeries = new LineSeries()
             {
+                //LineSmoothness= 0.0, //Spline Interpolation 0 off, 1 strong
                 Values = PEPoints
             };
             PESeriesCollection = new SeriesCollection();
@@ -405,21 +406,13 @@ namespace PCFS.ViewModel
         }
          
 
-        private void UpdateCharts()
-        {
-            if (_selectedPCFSCurve == null) return;
-            if (_selectedPCFSCurve.positions == null) return;
-
-            G2Points.Clear();                     
-            G2Points.AddRange(_selectedPCFSCurve.positions.Zip(_selectedPCFSCurve.G2, (pos, g2) => new ObservablePoint(pos, g2)));
-
-            PEPoints.Clear();
-            PEPoints.AddRange(_selectedPCFSCurve.Energy.Zip(_selectedPCFSCurve.pE, (e, pe) => new ObservablePoint(e, pe)));
-        }
+        //##################################
+        //  E V E N T   H A N D L E R
+        //##################################
 
         private void OnScanProgressChanged(object sender, ScanProgressChangedEventArgs e)
         {
-            Step = e.CurrentStep.ToString() + " / " + e.TotalSteps.ToString();
+            Step = (e.CurrentStep+1).ToString() + " / " + e.TotalSteps.ToString();
             StagePosition = e.StagePosition.ToString()+" mm";
             RemainingTime = e.RemainingTime.ToString("hh\\:mm\\:ss");
         }
@@ -428,7 +421,7 @@ namespace PCFS.ViewModel
         {
             if (point == null) return;
 
-            SelectedDataPoint = DataPoints.Where(p => p.StagePosition == point.X).FirstOrDefault();
+            SelectedDataPoint = DataPoints.Where(p => IsInRange(p.StagePosition,point.X)).FirstOrDefault();
 
             if (SelectedDataPoint != null)
             {
@@ -458,9 +451,37 @@ namespace PCFS.ViewModel
             UpdateCharts();
         }
 
+        //##################################
+        //   A U X   F U N C T I O N S
+        //##################################
+        
         private void WriteLog(string message)
         {
             Messages = DateTime.Now.ToString("HH:mm:ss")+" "+message + "\n" + Messages;
         }
+
+        private void UpdateCharts()
+        {
+            if (_selectedPCFSCurve == null) return;
+            if (_selectedPCFSCurve.positions == null) return;
+
+            G2Points.Clear();
+            G2Points.AddRange(_selectedPCFSCurve.positions.Zip(_selectedPCFSCurve.G2, (pos, g2) => new ObservablePoint(pos, g2)));
+
+            PEPoints.Clear();
+            PEPoints.AddRange(_selectedPCFSCurve.Energy.Skip(1).Reverse().Zip(_selectedPCFSCurve.pE.Skip(1).Reverse(), (e, pe) => new ObservablePoint(-e, pe)));
+            PEPoints.AddRange(_selectedPCFSCurve.Energy.Zip(_selectedPCFSCurve.pE, (e, pe) => new ObservablePoint(e, pe)));
+            
+        }
+
+        private bool IsInRange(double x1, double x2)
+        {
+            double ratio = 0.001;
+            double upper = x2 * (1 + ratio);
+            double lower = x2 * (1 - ratio);
+
+            return x1 >= lower && x2 <= upper;
+        }
+
     }
 }

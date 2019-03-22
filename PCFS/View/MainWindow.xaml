@@ -66,10 +66,12 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="100"/>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="5"/>
-                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Grid.Row="0" Grid.ColumnSpan="4" Text="TimeTagger"  Style="{StaticResource SettingHeader }"/>
@@ -80,9 +82,9 @@
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Channel 1" />
                     <TextBox Grid.Row="2" Grid.Column="1" Width="30" Text="{Binding Chan1, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Offset" />
-                    <TextBox Grid.Row="3" Grid.Column="1" Width="80" Text="{Binding Offset, UpdateSourceTrigger=PropertyChanged}"/>
-                    <TextBlock Grid.Row="3" Grid.Column="4" Width="Auto" Text="ps"/>
+                    <TextBlock Grid.Row="2" Grid.Column="3" Text="Offset" />
+                    <TextBox Grid.Row="2" Grid.Column="4" Width="60" Text="{Binding Offset, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="5" Width="Auto" Text="ps" Margin="5,0,5,0"/>
                 </Grid>
 
                 <Separator Margin="0,10,0,10"/>

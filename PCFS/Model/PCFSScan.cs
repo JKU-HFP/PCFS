@@ -125,7 +125,7 @@ namespace PCFS.Model
             {
                 PacketSize = 1000,
                 FileName = @"E:\Dropbox\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
-                PacketDelayTimeMilliSeonds = 100
+                PacketDelayTimeMilliSeonds = 500
             };
             
             //==============================================
@@ -327,8 +327,9 @@ namespace PCFS.Model
 
             //Calculate energy scale
             double[] positions = relevantPoints.Select(p => p.StagePosition).ToArray();
-            double eScaleFactor = 1.23984 / (positions.Length * StepWidth); //10^6 * 2 pi c hbar / eCharge [ueV]
-            double[] energyScale = positions.Select(p => p * eScaleFactor).ToArray();
+            double eScaleFactor = 1239.84 / (positions.Length * 2* StepWidth); //10^6 * 2 pi c hbar / eCharge [ueV]
+            int[] posIndices = Enumerable.Range(0, relevantPoints.Count()).ToArray();
+            double[] energyScale = posIndices.Select(p => p * eScaleFactor).ToArray();        
 
             int numBins = _binningList.Count;
             for (int i=0; i<numBins; i++)
