@@ -8,6 +8,7 @@ using System.Windows.Data;
 
 namespace PCFS.ViewModel.Converters
 {
+    [ValueConversion(typeof(long), typeof(string))]
     public class LongToTimeSpanConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

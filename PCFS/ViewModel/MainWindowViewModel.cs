@@ -12,6 +12,7 @@ using System.Collections.ObjectModel;
 using LiveCharts;
 using LiveCharts.Wpf;
 using LiveCharts.Defaults;
+using System.Windows.Media;
 
 namespace PCFS.ViewModel
 {
@@ -58,6 +59,30 @@ namespace PCFS.ViewModel
                 OnPropertyChanged("Offset");
             }
         }
+
+        private int _PacketSize;
+        public int PacketSize
+        {
+            get { return _PacketSize; }
+            set
+            {
+                _PacketSize = value;
+                OnPropertyChanged("PacketSize");
+            }
+        }
+
+        private bool _autoCalcPacketSize = true;
+        public bool AutoCalcPacketSize
+        {
+            get { return _autoCalcPacketSize; }
+            set
+            {
+                _autoCalcPacketSize = value;
+                OnPropertyChanged("AutoCalcPacketSize");
+            }
+        }
+               
+
 
         private double _fastVelocity = 25.0;
         public double FastVelocity
@@ -305,7 +330,7 @@ namespace PCFS.ViewModel
         public RelayCommand<ChartPoint> DataPointClickCommand { get; private set; }
 
         public MainWindowViewModel()
-        {
+        {                     
             OnStepWidthChanged();
             OnEstimatedTotalTimeChanged();
 
@@ -318,8 +343,11 @@ namespace PCFS.ViewModel
             //Create chart elements
             G2Points = new ChartValues<ObservablePoint> { };
             G2LineSeries = new LineSeries()
-            {
-                Values = G2Points,           
+            {               
+                //Fill = new SolidColorBrush() { Opacity = 0.5, Color = Colors.Red },
+                //PointForeground = Brushes.Purple,
+                //Stroke = Brushes.Black,
+                Values = G2Points
             };
             G2SeriesCollection = new SeriesCollection();
             G2SeriesCollection.Add(G2LineSeries);
@@ -358,6 +386,19 @@ namespace PCFS.ViewModel
                 _pcfsScan.chan0 = Chan0;
                 _pcfsScan.chan1 = Chan1;
                 _pcfsScan.Offset = Offset;
+
+                if(AutoCalcPacketSize)
+                {
+                    (int cr0, int cr1) countrate = _pcfsScan.GetCountrates();
+
+                    //Target: 100 Packets total. Minimum packet size: 100
+                    _pcfsScan.PacketSize = Math.Max( (countrate.cr0 + countrate.cr1) * IntegrationTime / (2 * 100), 100);
+                    PacketSize = _pcfsScan.PacketSize;
+                }
+                else
+                {
+                    _pcfsScan.PacketSize = PacketSize;
+                }
 
                 _pcfsScan.SlowVelocity = SlowVelocity;
                 _pcfsScan.FastVelocity = FastVelocity;
