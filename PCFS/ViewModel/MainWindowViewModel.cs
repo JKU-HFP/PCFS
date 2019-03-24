@@ -251,17 +251,22 @@ namespace PCFS.ViewModel
             }
         }
 
-        public SeriesCollection G2SeriesCollection { get; set; }
-        public LineSeries G2LineSeries { get; set; }
-        public ChartValues<ObservablePoint> G2Points { get; set; }
 
-        public SeriesCollection PreviewSeriesCollection { get; set; }
-        public LineSeries PreviewLineSeries { get; set; }
-        public ChartValues<ObservablePoint> PreviewPoints { get; set; }
-
-        public SeriesCollection PESeriesCollection { get; set; }
-        public LineSeries PELineSeries { get; set; }
-        public ChartValues<ObservablePoint> PEPoints { get; set; }
+        public DataChartViewModel G2Chart { get; set; } = new DataChartViewModel(Colors.Blue)
+        {
+            XAxisTitle = "Position (mm)",
+            YAxisTitle ="g2",
+        };
+        public DataChartViewModel PreviewChart { get; set; } = new DataChartViewModel(Colors.Blue)
+        {
+            XAxisTitle = "Time delay (ns)",
+            YAxisTitle = "Coincidences"
+        };
+        public DataChartViewModel PEChart { get; set; } = new DataChartViewModel(Colors.Red)
+        {
+            XAxisTitle = "E (μeV)",
+            YAxisTitle = "p"
+        };
 
         //Status
         private string _CountrateCh0;
@@ -327,8 +332,6 @@ namespace PCFS.ViewModel
         public RelayCommand<object> StartScanCommand { get; private set; }
         public RelayCommand<object> StopScanCommand { get; private set; }
 
-        public RelayCommand<ChartPoint> DataPointClickCommand { get; private set; }
-
         public MainWindowViewModel()
         {                     
             OnStepWidthChanged();
@@ -340,35 +343,8 @@ namespace PCFS.ViewModel
             _pcfsScan.DataChanged += OnDataChanged;
             _pcfsScan.ScanProgressChanged += OnScanProgressChanged;
 
-            //Create chart elements
-            G2Points = new ChartValues<ObservablePoint> { };
-            G2LineSeries = new LineSeries()
-            {               
-                //Fill = new SolidColorBrush() { Opacity = 0.5, Color = Colors.Red },
-                //PointForeground = Brushes.Purple,
-                //Stroke = Brushes.Black,
-                Values = G2Points
-            };
-            G2SeriesCollection = new SeriesCollection();
-            G2SeriesCollection.Add(G2LineSeries);
-
-            PreviewPoints = new ChartValues<ObservablePoint> { };
-            PreviewLineSeries = new LineSeries()
-            {
-                Values = PreviewPoints,
-                PointGeometry = null
-            };
-            PreviewSeriesCollection = new SeriesCollection();
-            PreviewSeriesCollection.Add(PreviewLineSeries);
-
-            PEPoints = new ChartValues<ObservablePoint> { };
-            PELineSeries = new LineSeries()
-            {
-                //LineSmoothness= 0.0, //Spline Interpolation 0 off, 1 strong
-                Values = PEPoints
-            };
-            PESeriesCollection = new SeriesCollection();
-            PESeriesCollection.Add(PELineSeries);
+            //Subscribe to events
+            G2Chart.DataPointClicked += OnDataPointSelected;               
            
             //Wire Relay Commands
             OpenBinningListCommand = new RelayCommand<object>(o =>
@@ -380,9 +356,18 @@ namespace PCFS.ViewModel
             InitializeCommand = new RelayCommand<object>(
             o =>
             {
-                G2Points.Clear();
-                PEPoints.Clear();
+                //Reset Charts
+                G2Chart.Clear();
+                PEChart.Clear();
 
+                G2Chart.XAxisMin = MinPosition;
+                G2Chart.XAxisMax = MaxPosition;
+
+                PreviewChart.XAxisMin = -20.0;
+                PreviewChart.XAxisMax = 20.0;
+
+
+                //Set scan parameters
                 _pcfsScan.chan0 = Chan0;
                 _pcfsScan.chan1 = Chan1;
                 _pcfsScan.Offset = Offset;
@@ -431,8 +416,6 @@ namespace PCFS.ViewModel
                 _pcfsScan.StopScan();
             });
 
-            DataPointClickCommand = new RelayCommand<ChartPoint>(OnDataPointSelected);
-
 
             //Setup timer
             _CountrateTimer = new Timer();
@@ -459,7 +442,7 @@ namespace PCFS.ViewModel
             RemainingTime = e.RemainingTime.ToString("hh\\:mm\\:ss");
         }
 
-        private void OnDataPointSelected(ChartPoint point)
+        private void OnDataPointSelected(object sender, ChartPoint point)
         {
             if (point == null) return;
 
@@ -469,8 +452,8 @@ namespace PCFS.ViewModel
             {
                 if(SelectedDataPoint.HistogramXPreview !=null)
                 {
-                    PreviewPoints.Clear();
-                    PreviewPoints.AddRange(SelectedDataPoint.HistogramXPreview.Zip(SelectedDataPoint.HistogramYPreview, (X, Y) => new ObservablePoint(X/1000.0, Y)));
+                    PreviewChart.Clear();
+                    PreviewChart.AddPoints(SelectedDataPoint.HistogramXPreview.Zip(SelectedDataPoint.HistogramYPreview, (X, Y) => new ObservablePoint(X/1000.0, Y)));
                 }
             }
     
@@ -507,12 +490,12 @@ namespace PCFS.ViewModel
             if (_selectedPCFSCurve == null) return;
             if (_selectedPCFSCurve.positions == null) return;
 
-            G2Points.Clear();
-            G2Points.AddRange(_selectedPCFSCurve.positions.Zip(_selectedPCFSCurve.G2, (pos, g2) => new ObservablePoint(pos, g2)));
+            G2Chart.Clear();
+            G2Chart.AddPoints(_selectedPCFSCurve.positions.Zip(_selectedPCFSCurve.G2, (pos, g2) => new ObservablePoint(pos, g2)));
 
-            PEPoints.Clear();
-            PEPoints.AddRange(_selectedPCFSCurve.Energy.Skip(1).Reverse().Zip(_selectedPCFSCurve.pE.Skip(1).Reverse(), (e, pe) => new ObservablePoint(-e, pe)));
-            PEPoints.AddRange(_selectedPCFSCurve.Energy.Skip(1).Zip(_selectedPCFSCurve.pE.Skip(1), (e, pe) => new ObservablePoint(e, pe)));
+            PEChart.Clear();
+            PEChart.AddPoints(_selectedPCFSCurve.Energy.Skip(1).Reverse().Zip(_selectedPCFSCurve.pE.Skip(1).Reverse(), (e, pe) => new ObservablePoint(-e, pe)));
+            PEChart.AddPoints(_selectedPCFSCurve.Energy.Skip(1).Zip(_selectedPCFSCurve.pE.Skip(1), (e, pe) => new ObservablePoint(e, pe)));
             
         }
 

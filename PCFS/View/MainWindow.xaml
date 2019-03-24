@@ -6,6 +6,7 @@
         xmlns:vm="clr-namespace:PCFS.ViewModel"
         xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:conv="clr-namespace:PCFS.ViewModel.Converters"
+        xmlns:v="clr-namespace:PCFS.View"
         xmlns:local="clr-namespace:PCFS"
         mc:Ignorable="d"
         Title="PCFS Scan" Height="800" Width="1200">
@@ -15,6 +16,7 @@
         <conv:InverseBooleanConverter x:Key="InverseBooleanConverter" />
 
         <SolidColorBrush x:Key="BackGroundColor" Color="LightGray"/>
+
     </Window.Resources>
 
     <Grid DataContext="{StaticResource MainWindowViewModel}">
@@ -147,6 +149,7 @@
                         <ColumnDefinition Width="5"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
+
 
                     <TextBlock Grid.Row="0" Grid.ColumnSpan="4" Text="Data Aquisition"  Style="{StaticResource SettingHeader }"/>
 
@@ -284,20 +287,10 @@
                 </ListBox>
             </DockPanel>
 
-            <lvc:CartesianChart Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
-                                DisableAnimations="True"
-                                Series="{Binding G2SeriesCollection}"
-                                DataClickCommand="{Binding DataPointClickCommand}">
-                <lvc:CartesianChart.AxisX>
-                    <lvc:Axis Title="Position (mm)" MinValue="0" MaxValue="300"/>
-                </lvc:CartesianChart.AxisX>
-                <lvc:CartesianChart.AxisY>
-                    <lvc:Axis Title="G2"/>
-                </lvc:CartesianChart.AxisY>
-            </lvc:CartesianChart>
 
-            
-            
+            <v:DataChart Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" DataContext="{Binding G2Chart}"/>
+
+
             <Border Grid.Row="1" Grid.Column="1" BorderBrush="Black" BorderThickness="1" >
                 <DockPanel Margin="5" LastChildFill="True">
                     <Grid DockPanel.Dock="Top" DataContext="{Binding SelectedDataPoint}">
@@ -330,32 +323,13 @@
                                    
                     </Grid>
 
-                    <lvc:CartesianChart Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" DockPanel.Dock="Bottom"
-                                        DisableAnimations="True"
-                                    Series="{Binding PreviewSeriesCollection}">
-                        <lvc:CartesianChart.AxisX>
-                            <lvc:Axis Title="Position (mm)" MinValue="-20" MaxValue="20" />
-                        </lvc:CartesianChart.AxisX>
-                        <lvc:CartesianChart.AxisY>
-                            <lvc:Axis Title="Coincidences"/>
-                        </lvc:CartesianChart.AxisY>
-                    </lvc:CartesianChart>
-
+                    <v:DataChart Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" DataContext="{Binding PreviewChart}"/>
+          
                 </DockPanel>
             </Border>
-            
-                   
 
-            <lvc:CartesianChart Grid.Row="1" Grid.Column="2"
-                                DisableAnimations="True"
-                                Series="{Binding PESeriesCollection}">
-                <lvc:CartesianChart.AxisX>
-                    <lvc:Axis Title="e (ueV)"/>
-                </lvc:CartesianChart.AxisX>
-                <lvc:CartesianChart.AxisY>
-                    <lvc:Axis Title="p(e)"/>
-                </lvc:CartesianChart.AxisY>
-            </lvc:CartesianChart>
+            <v:DataChart Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" DataContext="{Binding PEChart}"/>
+
         </Grid>
 
 
