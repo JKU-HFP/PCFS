@@ -392,8 +392,14 @@ namespace PCFS.Model
             //Calculate energy scale
             double[] positions = relevantPoints.Select(p => p.StagePosition).ToArray();
             double eScaleFactor = 1239.84 / (positions.Length * 2* StepWidth); //10^6 * 2 pi c hbar / eCharge [ueV]
+
             int[] posIndices = Enumerable.Range(0, relevantPoints.Count()).ToArray();
-            double[] energyScale = posIndices.Select(p => p * eScaleFactor).ToArray();        
+
+            //int FFTshift = posIndices.Length % 2 == 0 ? posIndices.Length / 2 + 1: posIndices.Length / 2;        
+            int FFTshift = posIndices.Length / 2;
+            int[] energyIndices = posIndices.Select(p => p - FFTshift).ToArray();
+
+            double[] energyScale = energyIndices.Select(p => p * eScaleFactor).ToArray();
 
             int numBins = _binningList.Count;
             for (int i=0; i<numBins; i++)
@@ -424,6 +430,9 @@ namespace PCFS.Model
                 Complex32[] samples = curve.G2Norm.Select(p => new Complex32((float)p, 0)).ToArray();
                 Fourier.Inverse(samples,FourierOptions.NoScaling);
 
+                //FFT Shift
+                Rotate<Complex32>(samples, FFTshift);
+
                 curve.pE = samples.Select(p => (double)p.MagnitudeSquared).ToArray();
 
                 double error_PE = curve.G2Err.Select(p => p * p).Sum();
@@ -431,6 +440,33 @@ namespace PCFS.Model
 
             }
 
+        }
+
+        public static void Rotate<T>(T[] array, int count)
+        {
+            if (array == null || array.Length < 2) return;
+            count %= array.Length;
+            if (count == 0) return;
+            int left = count < 0 ? -count : array.Length + count;
+            int right = count > 0 ? count : array.Length - count;
+            if (left <= right)
+            {
+                for (int i = 0; i < left; i++)
+                {
+                    var temp = array[0];
+                    Array.Copy(array, 1, array, 0, array.Length - 1);
+                    array[array.Length - 1] = temp;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < right; i++)
+                {
+                    var temp = array[array.Length - 1];
+                    Array.Copy(array, 0, array, 1, array.Length - 1);
+                    array[0] = temp;
+                }
+            }
         }
 
         private void BgwScanProgressChanged(object sender, ProgressChangedEventArgs e)

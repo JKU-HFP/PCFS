@@ -521,7 +521,6 @@ namespace PCFS.ViewModel
             G2Chart.AddPoints(_selectedPCFSCurve.positions.Zip(_selectedPCFSCurve.G2, (pos, g2) => new ObservablePoint(pos, g2)));
 
             PEChart.Clear();
-            PEChart.AddPoints(_selectedPCFSCurve.Energy.Skip(1).Reverse().Zip(_selectedPCFSCurve.pE.Skip(1).Reverse(), (e, pe) => new ObservablePoint(-e, pe)));
             PEChart.AddPoints(_selectedPCFSCurve.Energy.Zip(_selectedPCFSCurve.pE, (e, pe) => new ObservablePoint(e, pe)));
             
         }
