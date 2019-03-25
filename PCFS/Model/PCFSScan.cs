@@ -431,9 +431,10 @@ namespace PCFS.Model
             }
             else
             {
-                WriteLog("Scan completed.");
-                SavePCFSCurves();
+                WriteLog("Scan completed.");               
             }
+
+            SavePCFSCurves();
         }
 
         private void SavePCFSCurves()
