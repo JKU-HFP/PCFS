@@ -36,9 +36,9 @@ namespace PCFS.Model
         
         public static string FormattedTime(long time)
         {
-            if (time >= 1000000000) return (time / 1000000000).ToString()+" ms";
-            if (time >= 1000000) return (time / 1000000).ToString() + " μs";
-            if (time >= 1000) return (time / 1000).ToString() + " ns";
+            if (Math.Abs(time) >= 1000000000) return (time / 1000000000).ToString()+" ms";
+            if (Math.Abs(time) >= 1000000) return (time / 1000000).ToString() + " μs";
+            if (Math.Abs(time) >= 1000) return (time / 1000).ToString() + " ns";
 
             return time.ToString() + "ps";
         }
