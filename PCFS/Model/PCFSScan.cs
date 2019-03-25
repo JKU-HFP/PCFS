@@ -133,21 +133,21 @@ namespace PCFS.Model
             _PCFSCurves = new List<PCFSCurve>();
 
 
-            //_linearStage = new PI_GCS2_Stage(_loggerCallback);
-            //_linearStage.Connect("C-863");
+            _linearStage = new PI_GCS2_Stage(_loggerCallback);
+            _linearStage.Connect("C-863");
 
-            //_timeTagger = new HydraHarpTagger(_loggerCallback);
+            _timeTagger = new HydraHarpTagger(_loggerCallback);
 
             //================ Simulations ================
-            _linearStage = new SimulatedLinearStage();
-            _linearStage.Connect("");
+            //_linearStage = new SimulatedLinearStage();
+            //_linearStage.Connect("");
 
-            _timeTagger = new SimulatedTagger(_loggerCallback)
-            {
-                PacketSize = PacketSize,
-                FileName = @"E:\Dropbox\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
-                PacketDelayTimeMilliSeonds = 50
-            };
+            //_timeTagger = new SimulatedTagger(_loggerCallback)
+            //{
+            //    PacketSize = PacketSize,
+            //    FileName = @"E:\Dropbox\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
+            //    PacketDelayTimeMilliSeonds = 50
+            //};
 
             //==============================================
 
@@ -279,7 +279,7 @@ namespace PCFS.Model
             StartScanTime = DateTime.Now;
 
             string backupDir = string.IsNullOrEmpty(BackupDirectory) ? "" : BackupDirectory + "\\";
-            _PCFSDataDirectoryInfo = Directory.CreateDirectory(backupDir+"PCFSData" + StartScanTime.ToString("yyyy_MM_dd_HH_mm_ss"));
+            _PCFSDataDirectoryInfo = Directory.CreateDirectory(backupDir+"PCFSData_" + StartScanTime.ToString("yyyy_MM_dd_HH_mm_ss"));
             _PCFSDataDirectory = _PCFSDataDirectoryInfo.ToString();         
 
             WriteLog("Start scanning. Files saved to "+_PCFSDataDirectoryInfo.FullName);
@@ -504,12 +504,13 @@ namespace PCFS.Model
                 numLines = curve.G2.Length;
                 outstrings = new string[numLines + 2];
 
-                outstrings[0] = _PCFSCurves[i].BinningString;
-                outstrings[1] = "Pos \t G2 \t G2Err \t E \t pE \t pEErr";
+                outstrings[0] = "Timebin: "+_PCFSCurves[i].BinningString+"\t Normalization Factor"+_PCFSCurves[i].RenormFactor.ToString(fF,cult);
+                outstrings[1] = "Pos \t G2 \t G2Err \t G2Norm \t G2NormErr \t E \t pE \t pEErr";
 
                 for(int j=0; j<numLines; j++)
                 {
                     outstrings[j + 2] = curve.positions[j].ToString(fF, cult) + "\t" + curve.G2[j].ToString(fF, cult) + "\t" + curve.G2Err[j].ToString(fF, cult) + "\t"
+                                      + curve.G2Norm[j].ToString(fF, cult) + "\t" + curve.G2NormErr[j].ToString(fF, cult) + "\t"
                                       + curve.Energy[j].ToString(fF, cult) + "\t" + curve.pE[j].ToString(fF, cult) + "\t" + curve.PEErr[j].ToString(fF, cult);
                 }
 
