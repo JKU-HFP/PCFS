@@ -32,6 +32,7 @@ namespace PCFS.Model
         private BackgroundWorker _scanBgWorker;
         private Stopwatch _stopwatch;
 
+        DirectoryInfo _PCFSDataDirectoryInfo;
         string _PCFSDataDirectory = "";
 
         //#################################
@@ -65,12 +66,17 @@ namespace PCFS.Model
         public double IntegrationTime { get; set; } = 10.0;
         public int NumRepetitions { get; set; } = 4;
         public string BinningListFilename { get; set; } = "";
+        public string BackupDirectory { get; set; } = "";
+        public bool BackupTTTRData { get; set; } = false;
 
         public int CurrentStep { get; private set; } = 0;
+        public int ProcessedSteps { get; private set; } = 0;
         public int Totalsteps
         {
             get { return NumRepetitions * NumSteps; }
         }
+
+
 
 
         //Getters
@@ -124,22 +130,22 @@ namespace PCFS.Model
             _DataPoints = new List<DataPoint> { };
             _PCFSCurves = new List<PCFSCurve>();
 
+
+            _linearStage = new PI_GCS2_Stage(_loggerCallback);
+            _linearStage.Connect("C-863");
+
+            _timeTagger = new HydraHarpTagger(_loggerCallback);
+
             //================ Simulations ================
+            //_linearStage = new SimulatedLinearStage();
+            //_linearStage.Connect("");
 
-            //_linearStage = new PI_GCS2_Stage(_loggerCallback);
-            //_linearStage.Connect("C-863");
-
-            //_timeTagger = new HydraHarpTagger(_loggerCallback);
-
-            _linearStage = new SimulatedLinearStage();
-            _linearStage.Connect("");
-
-            _timeTagger = new SimulatedTagger(_loggerCallback)
-            {
-                PacketSize = PacketSize,
-                FileName = @"C:\Users\Christian\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
-                PacketDelayTimeMilliSeonds = 50
-            };
+            //_timeTagger = new SimulatedTagger(_loggerCallback)
+            //{
+            //    PacketSize = PacketSize,
+            //    FileName = @"E:\Dropbox\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
+            //    PacketDelayTimeMilliSeonds = 50
+            //};
 
             //==============================================
 
@@ -175,6 +181,8 @@ namespace PCFS.Model
             //Reset Status variables
             RepetionsDone = 0;
             DataAvailable = false;
+            ProcessedSteps = 0;
+            CurrentStep = 0;
 
             //Create Data Points
             _DataPoints.Clear();
@@ -264,11 +272,15 @@ namespace PCFS.Model
             ScanPointsInitialized = false;
             ScanInProgress = true;
             CurrentStep = 0;
+            ProcessedSteps = 0;
 
             ScanStartTime = DateTime.Now;
-            _PCFSDataDirectory = Directory.CreateDirectory("PCFSData"+ScanStartTime.ToString("yyyy_MM_dd_HH_mm_ss")).ToString();
 
-            WriteLog("Start scanning.");
+            string backupDir = string.IsNullOrEmpty(BackupDirectory) ? "" : BackupDirectory + "\\";
+            _PCFSDataDirectoryInfo = Directory.CreateDirectory(backupDir+"PCFSData" + ScanStartTime.ToString("yyyy_MM_dd_HH_mm_ss"));
+            _PCFSDataDirectory = _PCFSDataDirectoryInfo.ToString();         
+
+            WriteLog("Start scanning. Files saved to "+_PCFSDataDirectoryInfo.FullName);
 
             _scanBgWorker.RunWorkerAsync();
         }
@@ -308,11 +320,16 @@ namespace PCFS.Model
                     _linearStage.SetVelocity(SlowVelocity);
                     _linearStage.Move_Relative(SlowVelocity * IntegrationTime);
 
-                    if(!String.IsNullOrEmpty(_PCFSDataDirectory))
+                    if(!String.IsNullOrEmpty(_PCFSDataDirectory) && BackupTTTRData)
                     {
                         string taggerbackupdirectory = Directory.CreateDirectory(Path.Combine(_PCFSDataDirectory, "TTTR_Backup")).ToString();
                         _timeTagger.BackupFilename = Path.Combine(_PCFSDataDirectory + "\\" + taggerbackupdirectory, "TTTRBackup_Step" + CurrentStep.ToString() + ".ht2");
                     } 
+                    else
+                    {
+                        _timeTagger.BackupFilename = "";
+                    }
+
                     _timeTagger.StartCollectingTimeTagsAsync();
                     _stopwatch.Restart();
 
@@ -338,6 +355,8 @@ namespace PCFS.Model
                 SaveDataPoint(currPoint);
                 CalculatePCFS();
             });
+
+            ProcessedSteps++;
 
             OnDataChanged(new DataChangedEventArgs(_DataPoints, _PCFSCurves));
         }

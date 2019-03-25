@@ -81,7 +81,18 @@ namespace PCFS.ViewModel
                 OnPropertyChanged("AutoCalcPacketSize");
             }
         }
-               
+
+        private bool _backupTTTRData = true;
+        public bool BackupTTTRData
+        {
+            get { return _backupTTTRData; }
+            set
+            {
+                _backupTTTRData = value;
+                OnPropertyChanged("BackupTTTRData");
+            }
+        }
+
 
 
         private double _fastVelocity = 25.0;
@@ -324,6 +335,19 @@ namespace PCFS.ViewModel
             }
         }
 
+        private string _processedPoints;
+        public string ProcessedPoints
+        {
+            get { return _processedPoints; }
+            set
+            {
+                _processedPoints = value;
+                OnPropertyChanged("ProcessedPoints");
+            }
+
+        }
+
+
 
         //Commands
         public RelayCommand<object> OpenBinningListCommand { get; private set; }
@@ -384,6 +408,8 @@ namespace PCFS.ViewModel
                 {
                     _pcfsScan.PacketSize = PacketSize;
                 }
+
+                _pcfsScan.BackupTTTRData = BackupTTTRData;
 
                 _pcfsScan.SlowVelocity = SlowVelocity;
                 _pcfsScan.FastVelocity = FastVelocity;
@@ -473,6 +499,7 @@ namespace PCFS.ViewModel
 
         private void OnDataChanged(object sender, DataChangedEventArgs e)
         {
+            ProcessedPoints = _pcfsScan.ProcessedSteps.ToString() + " / " + _pcfsScan.Totalsteps;
             UpdateCharts();
         }
 
