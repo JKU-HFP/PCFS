@@ -45,7 +45,8 @@ namespace PCFS.Model
         public bool DataAvailable { get; private set; } = false;
         public bool ScanInProgress { get; private set; } = false;
         public int RepetionsDone { get; private set; } = 0;
-        public DateTime ScanStartTime;
+        public DateTime StartScanTime;
+        public TimeSpan TotalScanTime;
 
         //TimeTagger
         public byte chan0 { get; set; } = 0;
@@ -65,6 +66,7 @@ namespace PCFS.Model
         public double StepWidth { get; private set; } = 0.0;
         public double IntegrationTime { get; set; } = 10.0;
         public int NumRepetitions { get; set; } = 4;
+        public bool RenormalizeG2 { get; set; } = true;
         public string BinningListFilename { get; set; } = "";
         public string BackupDirectory { get; set; } = "";
         public bool BackupTTTRData { get; set; } = false;
@@ -131,21 +133,21 @@ namespace PCFS.Model
             _PCFSCurves = new List<PCFSCurve>();
 
 
-            _linearStage = new PI_GCS2_Stage(_loggerCallback);
-            _linearStage.Connect("C-863");
+            //_linearStage = new PI_GCS2_Stage(_loggerCallback);
+            //_linearStage.Connect("C-863");
 
-            _timeTagger = new HydraHarpTagger(_loggerCallback);
+            //_timeTagger = new HydraHarpTagger(_loggerCallback);
 
             //================ Simulations ================
-            //_linearStage = new SimulatedLinearStage();
-            //_linearStage.Connect("");
+            _linearStage = new SimulatedLinearStage();
+            _linearStage.Connect("");
 
-            //_timeTagger = new SimulatedTagger(_loggerCallback)
-            //{
-            //    PacketSize = PacketSize,
-            //    FileName = @"E:\Dropbox\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
-            //    PacketDelayTimeMilliSeonds = 50
-            //};
+            _timeTagger = new SimulatedTagger(_loggerCallback)
+            {
+                PacketSize = PacketSize,
+                FileName = @"E:\Dropbox\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
+                PacketDelayTimeMilliSeonds = 50
+            };
 
             //==============================================
 
@@ -274,10 +276,10 @@ namespace PCFS.Model
             CurrentStep = 0;
             ProcessedSteps = 0;
 
-            ScanStartTime = DateTime.Now;
+            StartScanTime = DateTime.Now;
 
             string backupDir = string.IsNullOrEmpty(BackupDirectory) ? "" : BackupDirectory + "\\";
-            _PCFSDataDirectoryInfo = Directory.CreateDirectory(backupDir+"PCFSData" + ScanStartTime.ToString("yyyy_MM_dd_HH_mm_ss"));
+            _PCFSDataDirectoryInfo = Directory.CreateDirectory(backupDir+"PCFSData" + StartScanTime.ToString("yyyy_MM_dd_HH_mm_ss"));
             _PCFSDataDirectory = _PCFSDataDirectoryInfo.ToString();         
 
             WriteLog("Start scanning. Files saved to "+_PCFSDataDirectoryInfo.FullName);
@@ -352,7 +354,7 @@ namespace PCFS.Model
             await Task.Run(() =>
             {
                 currPoint.AddMeasurement(tt, totaltime);
-                SaveDataPoint(currPoint);
+                WriteDataPoint(currPoint);
                 CalculatePCFS();
             });
 
@@ -361,7 +363,7 @@ namespace PCFS.Model
             OnDataChanged(new DataChangedEventArgs(_DataPoints, _PCFSCurves));
         }
 
-        private void SaveDataPoint(DataPoint dp)
+        private void WriteDataPoint(DataPoint dp)
         {
             int numLines = dp.HistogramX.Length;
             string fF = "F3";
@@ -405,12 +407,28 @@ namespace PCFS.Model
             //Calculate Fourier Transforms
             foreach(PCFSCurve curve in _PCFSCurves)
             {
-                Complex32[] samples = curve.G2.Select(p => new Complex32((float)p, 0)).ToArray();
+                if(RenormalizeG2)
+                {
+                    curve.RenormFactor = 1/curve.G2.Last();
+                    curve.G2Norm = curve.G2.Select(p => p * curve.RenormFactor).ToArray();
+                    curve.G2NormErr = curve.G2Err.Select(p => p * curve.RenormFactor).ToArray();
+                }
+                else
+                {
+                    curve.RenormFactor = 1.0;
+                    curve.G2Norm = curve.G2;
+                    curve.G2NormErr = curve.G2Err;
+                }
+
+
+                Complex32[] samples = curve.G2Norm.Select(p => new Complex32((float)p, 0)).ToArray();
                 Fourier.Inverse(samples,FourierOptions.NoScaling);
+
                 curve.pE = samples.Select(p => (double)p.MagnitudeSquared).ToArray();
 
                 double error_PE = curve.G2Err.Select(p => p * p).Sum();
                 curve.PEErr = Enumerable.Repeat(error_PE, curve.pE.Length).ToArray();
+
             }
 
         }
@@ -434,10 +452,34 @@ namespace PCFS.Model
                 WriteLog("Scan completed.");               
             }
 
-            SavePCFSCurves();
+            TotalScanTime = DateTime.Now - StartScanTime;
+
+            WriteLog("Total scantime: "+TotalScanTime.ToString("hh\\:mm\\:ss"));
+            WritePCFSCurves();
         }
 
-        private void SavePCFSCurves()
+        private void WriteParameters()
+        {
+            string fF = "F3";
+            CultureInfo cult = CultureInfo.InvariantCulture;
+
+            string filename = Path.Combine(_PCFSDataDirectory, "Parameters");
+
+            string[] filestring = new string[]{
+                                 "Fast velocity:\t" + FastVelocity.ToString(fF, cult),
+                                 "Slow velocity:\t" + SlowVelocity.ToString(fF, cult),
+                                 "Min. Position:\t" + MinPosition.ToString(fF, cult),
+                                 "Max. Position:\t" + MaxPosition.ToString(fF, cult),
+                                 "Number of Steps:\t" + NumSteps.ToString(),
+                                 "Stepwidth:\t" + StepWidth.ToString(fF, cult),
+                                 "Integration Time:\t" + IntegrationTime.ToString(),
+                                 "Total Scan Time:\t" + TotalScanTime.ToString("hh\\:mm\\:ss")
+                                  };
+
+            File.WriteAllLines(filename, filestring);
+        }
+    
+        private void WritePCFSCurves()
         {
             string PCFSCurvesDirectory = Directory.CreateDirectory(Path.Combine(_PCFSDataDirectory, "PCFSCurves")).ToString();
 
@@ -460,13 +502,14 @@ namespace PCFS.Model
 
                 PCFSCurve curve = _PCFSCurves[i];
                 numLines = curve.G2.Length;
-                outstrings = new string[numLines + 1];
+                outstrings = new string[numLines + 2];
 
-                outstrings[0] = "Pos \t G2 \t G2Err \t E \t pE \t pEErr";
+                outstrings[0] = _PCFSCurves[i].BinningString;
+                outstrings[1] = "Pos \t G2 \t G2Err \t E \t pE \t pEErr";
 
                 for(int j=0; j<numLines; j++)
                 {
-                    outstrings[j + 1] = curve.positions[j].ToString(fF, cult) + "\t" + curve.G2[j].ToString(fF, cult) + "\t" + curve.G2Err[j].ToString(fF, cult) + "\t"
+                    outstrings[j + 2] = curve.positions[j].ToString(fF, cult) + "\t" + curve.G2[j].ToString(fF, cult) + "\t" + curve.G2Err[j].ToString(fF, cult) + "\t"
                                       + curve.Energy[j].ToString(fF, cult) + "\t" + curve.pE[j].ToString(fF, cult) + "\t" + curve.PEErr[j].ToString(fF, cult);
                 }
 

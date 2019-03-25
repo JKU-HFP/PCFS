@@ -522,7 +522,7 @@ namespace PCFS.ViewModel
 
             PEChart.Clear();
             PEChart.AddPoints(_selectedPCFSCurve.Energy.Skip(1).Reverse().Zip(_selectedPCFSCurve.pE.Skip(1).Reverse(), (e, pe) => new ObservablePoint(-e, pe)));
-            PEChart.AddPoints(_selectedPCFSCurve.Energy.Skip(1).Zip(_selectedPCFSCurve.pE.Skip(1), (e, pe) => new ObservablePoint(e, pe)));
+            PEChart.AddPoints(_selectedPCFSCurve.Energy.Zip(_selectedPCFSCurve.pE, (e, pe) => new ObservablePoint(e, pe)));
             
         }
 
