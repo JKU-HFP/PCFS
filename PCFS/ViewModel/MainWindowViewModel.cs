@@ -262,6 +262,19 @@ namespace PCFS.ViewModel
             }
         }
 
+        private string _renormFactor = "1.000";
+
+        public string RenormFactor
+        {
+            get { return _renormFactor; }
+            set
+            {
+                _renormFactor = value;
+                OnPropertyChanged("RenormFactor");
+            }
+        }
+
+
 
         public DataChartViewModel G2Chart { get; set; } = new DataChartViewModel(Colors.Blue)
         {
@@ -473,7 +486,7 @@ namespace PCFS.ViewModel
             if (point == null) return;
 
             SelectedDataPoint = DataPoints.Where(p => IsInRange(p.StagePosition,point.X)).FirstOrDefault();
-
+            
             if (SelectedDataPoint != null)
             {
                 if(SelectedDataPoint.HistogramXPreview !=null)
@@ -516,6 +529,8 @@ namespace PCFS.ViewModel
         {
             if (_selectedPCFSCurve == null) return;
             if (_selectedPCFSCurve.positions == null) return;
+
+            RenormFactor = _selectedPCFSCurve.RenormFactor.ToString("0.###E+00");
 
             G2Chart.Clear();
             G2Chart.AddPoints(_selectedPCFSCurve.positions.Zip(_selectedPCFSCurve.G2, (pos, g2) => new ObservablePoint(pos, g2)));

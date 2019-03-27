@@ -337,7 +337,14 @@
                 </DockPanel>
             </Border>
 
-            <v:DataChart Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" DataContext="{Binding PEChart}"/>
+            <DockPanel Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2">
+                <StackPanel HorizontalAlignment="right" DockPanel.Dock="top" Orientation="Horizontal">
+                    <TextBlock Text="Norm. Factor: "/>
+                    <TextBox TextAlignment="Right" MinWidth="100" IsReadOnly="True" Text="{Binding RenormFactor}"/>
+                </StackPanel>
+                <v:DataChart DockPanel.Dock="Bottom" DataContext="{Binding PEChart}"/>
+            </DockPanel>
+           
 
         </Grid>
 

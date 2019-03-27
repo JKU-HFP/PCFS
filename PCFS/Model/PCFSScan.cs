@@ -35,6 +35,8 @@ namespace PCFS.Model
         DirectoryInfo _PCFSDataDirectoryInfo;
         string _PCFSDataDirectory = "";
 
+        private object _processesLock = new object();
+
         //#################################
         // P R O P E R T I E S
         //#################################
@@ -77,8 +79,6 @@ namespace PCFS.Model
         {
             get { return NumRepetitions * NumSteps; }
         }
-
-
 
 
         //Getters
@@ -133,21 +133,21 @@ namespace PCFS.Model
             _PCFSCurves = new List<PCFSCurve>();
 
 
-            _linearStage = new PI_GCS2_Stage(_loggerCallback);
-            _linearStage.Connect("C-863");
+            //_linearStage = new PI_GCS2_Stage(_loggerCallback);
+            //_linearStage.Connect("C-863");
 
-            _timeTagger = new HydraHarpTagger(_loggerCallback);
+            //_timeTagger = new HydraHarpTagger(_loggerCallback);
 
             //================ Simulations ================
-            //_linearStage = new SimulatedLinearStage();
-            //_linearStage.Connect("");
+            _linearStage = new SimulatedLinearStage();
+            _linearStage.Connect("");
 
-            //_timeTagger = new SimulatedTagger(_loggerCallback)
-            //{
-            //    PacketSize = PacketSize,
-            //    FileName = @"E:\Dropbox\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
-            //    PacketDelayTimeMilliSeonds = 50
-            //};
+            _timeTagger = new SimulatedTagger(_loggerCallback)
+            {
+                PacketSize = PacketSize,
+                FileName = @"E:\Dropbox\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
+                PacketDelayTimeMilliSeonds = 50
+            };
 
             //==============================================
 
@@ -347,6 +347,23 @@ namespace PCFS.Model
                 }
                 RepetionsDone++;
             }
+
+            //Wait for data processing to finish
+            while(true)
+            {
+                if (_scanBgWorker.CancellationPending)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                lock(_processesLock)
+                {
+                    if (ProcessedSteps >= Totalsteps) break;
+                }
+
+                Thread.Sleep(100);
+            }
         }
 
         private async void ProcessDataAsync(DataPoint currPoint, List<TimeTags> tt, long totaltime)
@@ -358,8 +375,11 @@ namespace PCFS.Model
                 CalculatePCFS();
             });
 
-            ProcessedSteps++;
-
+            lock(_processesLock)
+            {
+                ProcessedSteps++;
+            }
+        
             OnDataChanged(new DataChangedEventArgs(_DataPoints, _PCFSCurves));
         }
 
@@ -491,6 +511,7 @@ namespace PCFS.Model
             TotalScanTime = DateTime.Now - StartScanTime;
 
             WriteLog("Total scantime: "+TotalScanTime.ToString("hh\\:mm\\:ss"));
+            WriteParameters();
             WritePCFSCurves();
         }
 
@@ -499,7 +520,7 @@ namespace PCFS.Model
             string fF = "F3";
             CultureInfo cult = CultureInfo.InvariantCulture;
 
-            string filename = Path.Combine(_PCFSDataDirectory, "Parameters");
+            string filename = Path.Combine(_PCFSDataDirectory, "Parameters.dat");
 
             string[] filestring = new string[]{
                                  "Fast velocity:\t" + FastVelocity.ToString(fF, cult),
