@@ -54,6 +54,12 @@
                             DisableAnimations="True"
                             Series="{Binding Collection}"
                             DataClickCommand="{Binding DataPointClickCommand}">
+            <lvc:CartesianChart.Resources>
+                <Style TargetType="lvc:DefaultTooltip">
+                    <Setter Property="ShowSeries" Value="false"/>
+                    <Setter Property="ShowTitle" Value="false"/>
+                </Style>
+            </lvc:CartesianChart.Resources>
             <lvc:CartesianChart.AxisX>
                 <lvc:Axis Title="{Binding XAxisTitle}" MinValue="{Binding XAxisMin}" MaxValue="{Binding XAxisMax}"/>
             </lvc:CartesianChart.AxisX>
