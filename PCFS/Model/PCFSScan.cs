@@ -133,21 +133,21 @@ namespace PCFS.Model
             _PCFSCurves = new List<PCFSCurve>();
 
 
-            //_linearStage = new PI_GCS2_Stage(_loggerCallback);
-            //_linearStage.Connect("C-863");
+            _linearStage = new PI_GCS2_Stage(_loggerCallback);
+            _linearStage.Connect("C-863");
 
-            //_timeTagger = new HydraHarpTagger(_loggerCallback);
+            _timeTagger = new HydraHarpTagger(_loggerCallback);
 
             //================ Simulations ================
-            _linearStage = new SimulatedLinearStage();
-            _linearStage.Connect("");
+            //_linearStage = new SimulatedLinearStage();
+            //_linearStage.Connect("");
 
-            _timeTagger = new SimulatedTagger(_loggerCallback)
-            {
-                PacketSize = PacketSize,
-                FileName = @"E:\Dropbox\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
-                PacketDelayTimeMilliSeonds = 50
-            };
+            //_timeTagger = new SimulatedTagger(_loggerCallback)
+            //{
+            //    PacketSize = PacketSize,
+            //    FileName = @"E:\Dropbox\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
+            //    PacketDelayTimeMilliSeonds = 50
+            //};
 
             //==============================================
 
@@ -351,11 +351,6 @@ namespace PCFS.Model
             //Wait for data processing to finish
             while(true)
             {
-                if (_scanBgWorker.CancellationPending)
-                {
-                    e.Cancel = true;
-                    return;
-                }
 
                 lock(_processesLock)
                 {
@@ -368,6 +363,7 @@ namespace PCFS.Model
 
         private async void ProcessDataAsync(DataPoint currPoint, List<TimeTags> tt, long totaltime)
         {
+            
             await Task.Run(() =>
             {
                 currPoint.AddMeasurement(tt, totaltime);
