@@ -138,7 +138,7 @@ namespace PCFS.Model
             //_timeTagger = new HydraHarpTagger(_loggerCallback);
 
             //================ Simulations ================
-            _linearStage = new SimulatedLinearStage();
+            _linearStage = new SimulatedLinearStage(_loggerCallback);
             _linearStage.Connect("");
 
             _timeTagger = new SimulatedTagger(_loggerCallback)
