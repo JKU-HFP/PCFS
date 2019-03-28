@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,7 +8,7 @@ using TimeTagger_Library;
 
 namespace PCFS.Model
 {
-    public class DataPoint
+    public class DataPoint : INotifyPropertyChanged
     {
         //Private fields
         private Kurolator _PCFSCorrelator;
@@ -17,15 +18,55 @@ namespace PCFS.Model
         private byte _chan0;
         private byte _chan1;
 
+        //Tracked Properties
+        private int _index = 0;
+        public int Index
+        {
+            get { return _index; }
+            set
+            {
+                _index = value;
+                OnPropertyChanged("Index");
+            }
+        }
+
+        private double _stagePosition = 0.0;
+        public double StagePosition
+        {
+            get { return _stagePosition; }
+            set
+            {
+                _stagePosition = value;
+                OnPropertyChanged("StagePosition");
+            }
+        }
+
+        private int _performedScans = 0;
+        public int PerformedScans
+        {
+            get { return _performedScans; }
+            set
+            {
+                _performedScans = value;
+                OnPropertyChanged("PerformedScans");
+            }
+        }
+
+        private long _totalTime = 0;
+        public long TotalTime
+        {
+            get { return _totalTime; }
+            set
+            {
+                _totalTime = value;
+                OnPropertyChanged("TotalTime");
+            }
+        }
+
         //Properties
-        public int Index { get; set; } = 0;
-
-        public double StagePosition { get; set; }
-        public double NumScans { get; set; }
-        public double PerformedScans { get; private set; }
+        public double NumScans { get; set; }   
         public long OffsetCh1 { get; set; } = 0;
-
-        public long TotalTime { get; private set; } = 0;
+               
         public long TotalCountsCh0 { get; private set; } = 0;
         public long TotalCountsCh1 { get; private set; } = 0;
         public long TotalCounts
@@ -44,6 +85,12 @@ namespace PCFS.Model
         public long[] HistogramXPreview { get; private set; }
         public long[] HistogramYPreview { get; private set; }
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        internal void OnPropertyChanged(string propname)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propname));
+        }
 
         public DataPoint(BinningListHistogram binningListHistogram, ulong timeWindow)
         {
@@ -57,7 +104,7 @@ namespace PCFS.Model
             //Setup G2 Preview Correlator
             ulong previewTimeWindow = 100000;
 
-            Histogram g2previewGroup = new Histogram(binningListHistogram.CorrelationConfig, previewTimeWindow, 512);
+            Histogram g2previewGroup = new Histogram(binningListHistogram.CorrelationConfig, previewTimeWindow, 256);
             _G2PreviewCorrelator = new Kurolator(new List<CorrelationGroup> { g2previewGroup }, previewTimeWindow);
 
             HistogramX = _PCFSCorrelator[0].Histogram_X;
@@ -79,7 +126,7 @@ namespace PCFS.Model
                 _PCFSCorrelator[0].ClearAllCorrelations(); //Clear correlations to save memory
 
                 _G2PreviewCorrelator.AddCorrelations(tt, tt, OffsetCh1);
-                _G2PreviewCorrelator[0].ClearAllCorrelations(); //Clear correlations to save memory
+                //_G2PreviewCorrelator[0].ClearAllCorrelations(); //Clear correlations to save memory
             }
 
             //Histograms and Normalization

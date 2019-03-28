@@ -267,19 +267,6 @@ namespace PCFS.ViewModel
             }
         }
 
-        private string _renormFactor = "1.000";
-
-        public string RenormFactor
-        {
-            get { return _renormFactor; }
-            set
-            {
-                _renormFactor = value;
-                OnPropertyChanged("RenormFactor");
-            }
-        }
-
-
 
         public DataChartViewModel G2Chart { get; set; } = new DataChartViewModel(Colors.Blue, 5.0)
         {
@@ -493,16 +480,17 @@ namespace PCFS.ViewModel
             if (point == null) return;
 
             SelectedDataPoint = DataPoints.Where(p => IsInRange(p.StagePosition,point.X)).FirstOrDefault();
-            
-            if (SelectedDataPoint != null)
-            {
-                if(SelectedDataPoint.HistogramXPreview !=null)
-                {
-                    PreviewChart.Clear();
-                    PreviewChart.AddPoints(SelectedDataPoint.HistogramXPreview.Zip(SelectedDataPoint.HistogramYPreview, (X, Y) => new ObservablePoint(X/1000.0, Y)));
-                }
-            }
-    
+
+            UpdatePreviewChart();
+        }
+
+        private void UpdatePreviewChart()
+        {
+            if (SelectedDataPoint == null) return;
+            if (SelectedDataPoint.HistogramXPreview == null) return;
+
+            PreviewChart.Clear();
+            PreviewChart.AddPoints(SelectedDataPoint.HistogramXPreview.Zip(SelectedDataPoint.HistogramYPreview, (X, Y) => new ObservablePoint(X / 1000.0, Y)));
         }
         
         private void OnScanInitialized(object sender, ScanInitializedEventArgs e)
@@ -510,7 +498,7 @@ namespace PCFS.ViewModel
             DataPoints = new ObservableCollection<DataPoint>(e.DataPoints);
             PCFSCurves = new ObservableCollection<PCFSCurve>(e.PCFSCurves);
 
-            _selectedPCFSCurve = PCFSCurves[0];
+            SelectedPCFSCurve = PCFSCurves[0];
 
             Step = "";
             StagePosition = "";
@@ -535,16 +523,14 @@ namespace PCFS.ViewModel
 
         private void UpdateCharts()
         {
-            if (_selectedPCFSCurve == null) return;
-            if (_selectedPCFSCurve.positions == null) return;
-
-            RenormFactor = _selectedPCFSCurve.RenormFactor.ToString("0.###E+00");
+            if (SelectedPCFSCurve == null) return;
+            if (SelectedPCFSCurve.positions == null) return;
 
             G2Chart.Clear();
-            G2Chart.AddPoints(_selectedPCFSCurve.positions.Zip(_selectedPCFSCurve.G2, (pos, g2) => new ObservablePoint(pos, g2)));
+            G2Chart.AddPoints(SelectedPCFSCurve.positions.Zip(SelectedPCFSCurve.G2, (pos, g2) => new ObservablePoint(pos, g2)));
 
             PEChart.Clear();
-            PEChart.AddPoints(_selectedPCFSCurve.Energy.Zip(_selectedPCFSCurve.pE, (e, pe) => new ObservablePoint(e, pe)));
+            PEChart.AddPoints(SelectedPCFSCurve.Energy.Zip(SelectedPCFSCurve.pE, (e, pe) => new ObservablePoint(e, pe)));
             
         }
 

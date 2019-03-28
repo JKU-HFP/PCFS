@@ -270,13 +270,14 @@
         <Grid Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="3">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="10"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="150"/>
-                <ColumnDefinition Width="300"/>
-                <ColumnDefinition Width="5"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="300"/>
             </Grid.ColumnDefinitions>
             <Grid.Resources>
                 <Style TargetType="lvc:CartesianChart">
@@ -284,8 +285,9 @@
                     <Setter Property="AnimationsSpeed" Value="00:00:00.2"/>
                 </Style>
             </Grid.Resources>
+          
 
-            <DockPanel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2">
+            <DockPanel Grid.Row="0" Grid.Column="0" Grid.RowSpan="3">
                 <TextBlock DockPanel.Dock="top" FontWeight="bold" HorizontalAlignment="Center" Text="TimeBins"/>
                 <ListBox DockPanel.Dock="Bottom" ItemsSource="{Binding PCFSCurves, Mode=OneWay}" SelectedItem="{Binding SelectedPCFSCurve}"
                          ScrollViewer.VerticalScrollBarVisibility="Visible">
@@ -297,14 +299,16 @@
                 </ListBox>
             </DockPanel>
 
+            <GridSplitter Grid.Row="0" Grid.Column="2" Grid.RowSpan="3" HorizontalAlignment="center"
+                          VerticalAlignment="Stretch" Width="5"/>
 
-            <v:DataChart Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" DataContext="{Binding G2Chart}"/>
             
-            <Border Grid.Row="1" Grid.Column="1" BorderBrush="Black" BorderThickness="1" >
+            <v:DataChart Grid.Row="0" Grid.Column="1" DataContext="{Binding G2Chart}"/>
+
+            <Border Grid.Row="0" Grid.Column="3" BorderBrush="Black" BorderThickness="1" >
                 <DockPanel Margin="5" LastChildFill="True">
                     <Grid DockPanel.Dock="Top" DataContext="{Binding SelectedDataPoint}">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
@@ -326,31 +330,44 @@
 
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Total Integration Time"/>
                         <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding TotalTime, Mode=OneWay, Converter={StaticResource LongToTimeSpanConv}, ConverterParameter=1000000000}"/>
-
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Total Counts"/>
-                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding TotalCounts, Mode=OneWay}" />
-                                   
+                        
                     </Grid>
 
-                    <v:DataChart Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" DataContext="{Binding PreviewChart}"/>
-          
+                    <v:DataChart  Margin="0,10,0,0"  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" DataContext="{Binding PreviewChart}"/>
+
                 </DockPanel>
             </Border>
 
-            <GridSplitter Grid.Row="1" Grid.Column="2" HorizontalAlignment="center"
-                          VerticalAlignment="Stretch" Width="5"/>
+            <Canvas Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Background="{StaticResource BackGroundColor}"/>
 
-            <DockPanel Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="2">
-                <StackPanel HorizontalAlignment="right" DockPanel.Dock="top" Orientation="Horizontal">
-                    <TextBlock Text="Norm. Factor: "/>
-                    <TextBox TextAlignment="Right" MinWidth="100" IsReadOnly="True" Text="{Binding RenormFactor}"/>
-                </StackPanel>
-                <v:DataChart DockPanel.Dock="Bottom" DataContext="{Binding PEChart}"/>
-            </DockPanel>
-           
+            <v:DataChart Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" DataContext="{Binding PEChart}"/>
+
+            <Border Grid.Row="2" Grid.Column="3" BorderBrush="Black" BorderThickness="1" DataContext="{Binding SelectedPCFSCurve}" >
+                <DockPanel Margin="5" LastChildFill="True">
+                    <Grid DockPanel.Dock="Top">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="140" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Renorm. Factor:"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding RenormFactor}"/>
+                   
+                    </Grid>
+
+                </DockPanel>
+            </Border>
 
         </Grid>
-
+      
+        
         
         <GridSplitter Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="3" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
       

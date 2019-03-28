@@ -1,13 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace PCFS.Model
 {
-    public class PCFSCurve
+    public class PCFSCurve : INotifyPropertyChanged
     {
+        //Tracked properties
+        private double _renormFactor = 1.0;
+        public double RenormFactor
+        {
+            get { return _renormFactor; }
+            set
+            {
+                _renormFactor = value;
+                OnPropertyChanged("RenormFactor");
+            }
+        }
+
+        //Properties
         public (long low, long high) Binning { get; set; }
 
         public string BinningString
@@ -23,11 +37,17 @@ namespace PCFS.Model
         public double[] G2Err { get; set; }
         public double[] G2Norm { get; set; }
         public double[] G2NormErr { get; set; }
-        public double RenormFactor = 1.0;
 
         public double[] Energy { get; set; }
         public double[] pE { get; set; }
         public double[] PEErr { get; set; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        internal void OnPropertyChanged(string propname)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propname));
+        }
 
         public PCFSCurve()
         {

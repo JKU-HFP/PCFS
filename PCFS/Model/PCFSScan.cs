@@ -144,7 +144,7 @@ namespace PCFS.Model
             _timeTagger = new SimulatedTagger(_loggerCallback)
             {
                 PacketSize = PacketSize,
-                FileName = @"E:\Dropbox\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
+                FileName = @"C:\Users\Christian\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
                 PacketDelayTimeMilliSeonds = 50
             };
 
@@ -433,7 +433,7 @@ namespace PCFS.Model
             {
                 if(RenormalizeG2)
                 {
-                    curve.RenormFactor = 1/curve.G2.Last();
+                    curve.RenormFactor = 1/curve.G2.LastOrDefault();
                     curve.G2Norm = curve.G2.Select(p => p * curve.RenormFactor).ToArray();
                     curve.G2NormErr = curve.G2Err.Select(p => p * curve.RenormFactor).ToArray();
                 }
