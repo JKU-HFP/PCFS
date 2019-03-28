@@ -170,7 +170,7 @@
                     <TextBox Grid.Row="3" Grid.Column="1" Width="80" Text="{Binding NumSteps, UpdateSourceTrigger=PropertyChanged}"/>
 
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="Stepwidth" />
-                    <TextBox Grid.Row="4" Grid.Column="1" IsReadOnly="true" Background="LightGray" Width="80" Text="{Binding StepWidth, Mode=OneWay}"/>
+                    <TextBox Grid.Row="4" Grid.Column="1" IsReadOnly="true" Background="LightGray" Width="80" Text="{Binding StepWidth, StringFormat=F3, Mode=OneWay}"/>
                     <TextBlock Grid.Row="4" Grid.Column="4" Width="Auto" Text="mm"/>
 
                     <TextBlock Grid.Row="5" Grid.Column="0" Margin="0,10,0,0" Text="Integration Time" />
@@ -313,24 +313,28 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="140" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Index:"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Index"/>
                         <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Index}"/>
 
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Position:"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Position"/>
                         <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding StagePosition}" />
 
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Performed Scans:"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Performed Scans"/>
                         <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding PerformedScans, Mode=OneWay}" />
 
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Total Integration Time"/>
                         <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding TotalTime, Mode=OneWay, Converter={StaticResource LongToTimeSpanConv}, ConverterParameter=1000000000}"/>
-                        
+                       
+                        <TextBlock Grid.Row="45" Grid.Column="0" Text="Average coinc / s"/>
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding AverageCoincPerSecond, StringFormat=0.###E+00, Mode=OneWay}" />
+
                     </Grid>
 
                     <v:DataChart  Margin="0,10,0,0"  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" DataContext="{Binding PreviewChart}"/>
@@ -357,9 +361,12 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Renorm. Factor:"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding RenormFactor}"/>
-                   
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Renorm. Factor"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding RenormFactor, StringFormat=0.###E+00}"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Average Rel. Error G2"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AverageRelErrorG2, StringFormat=P2}"/>
+
                     </Grid>
 
                 </DockPanel>

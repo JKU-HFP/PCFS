@@ -63,6 +63,19 @@ namespace PCFS.Model
             }
         }
 
+        private double _averageCoincPerSecond;
+
+        public double AverageCoincPerSecond
+        {
+            get { return _averageCoincPerSecond; }
+            set
+            {
+                _averageCoincPerSecond = value;
+                OnPropertyChanged("AverageCoincPerSecond");
+            }
+        }
+
+
         //Properties
         public double NumScans { get; set; }   
         public long OffsetCh1 { get; set; } = 0;
@@ -134,7 +147,9 @@ namespace PCFS.Model
 
             HistogramY = _PCFSCorrelator[0].Histogram_Y;
             HistogramYErr = HistogramY.Select(p => Math.Sqrt(p)).ToArray();
-            
+
+            AverageCoincPerSecond = HistogramY.Zip(_timeBins, (histY, bin) => histY / (bin / 1000000000000.0)).Average();
+
             HistogramYNorm = HistogramY.Zip(_timeBins, (yval, bin) => yval * (NormalizationFactor / bin) ).ToArray();
             HistogramYNormErr = HistogramYErr.Zip(_timeBins, (yval, bin) => yval * (NormalizationFactor / bin)).ToArray();
 

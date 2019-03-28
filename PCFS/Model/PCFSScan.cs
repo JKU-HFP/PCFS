@@ -444,6 +444,7 @@ namespace PCFS.Model
                     curve.G2NormErr = curve.G2Err;
                 }
 
+                curve.AverageRelErrorG2 = curve.G2Norm.Zip(curve.G2NormErr, (g2, g2err) => g2err / g2).Average();
 
                 Complex32[] samples = curve.G2Norm.Select(p => new Complex32((float)p, 0)).ToArray();
                 Fourier.Inverse(samples,FourierOptions.NoScaling);

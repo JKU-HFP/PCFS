@@ -21,6 +21,18 @@ namespace PCFS.Model
             }
         }
 
+        private double _averageRelErrorG2 = 0;
+        public double AverageRelErrorG2
+        {
+            get { return _averageRelErrorG2; }
+            set
+            {
+                _averageRelErrorG2 = value;
+                OnPropertyChanged("AverageRelErrorG2");
+            }
+        }
+
+
         //Properties
         public (long low, long high) Binning { get; set; }
 
