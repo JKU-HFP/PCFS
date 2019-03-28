@@ -26,6 +26,19 @@ namespace PCFS.ViewModel
         // P R O P E R T I E S
         //#########################
 
+        private string _messages;
+        public string Messages
+        {
+            get { return _messages; }
+            set
+            {
+                _messages = value;
+                OnPropertyChanged("Messages");
+            }
+        }
+
+        #region Settings
+
         //Settings
         private byte _chan0 = 0;
         public byte Chan0
@@ -192,18 +205,8 @@ namespace PCFS.ViewModel
             EstimatedTotalTime = PCFSScan.GetEstimatedTime(0, NumSteps * Repetitions, IntegrationTime);
             OnPropertyChanged("EstimatedTotalTime");
         }
-               
-        private string _messages;
-        public string Messages
-        {
-            get { return _messages; }
-            set
-            {
-                _messages = value;
-                OnPropertyChanged("Messages");
-            }
-        }
 
+      
         private string _binningListFilename;
         public string BinningListFilename
         {
@@ -215,8 +218,10 @@ namespace PCFS.ViewModel
             }
         }
 
-        //Data
+        #endregion
 
+        #region Data
+        //Data
         private ObservableCollection<DataPoint> dataPoints;
         public ObservableCollection<DataPoint> DataPoints
         {
@@ -276,22 +281,24 @@ namespace PCFS.ViewModel
 
 
 
-        public DataChartViewModel G2Chart { get; set; } = new DataChartViewModel(Colors.Blue)
+        public DataChartViewModel G2Chart { get; set; } = new DataChartViewModel(Colors.Blue, 5.0)
         {
             XAxisTitle = "Position (mm)",
-            YAxisTitle ="g2",
+            YAxisTitle ="g2"
         };
-        public DataChartViewModel PreviewChart { get; set; } = new DataChartViewModel(Colors.Blue)
+        public DataChartViewModel PreviewChart { get; set; } = new DataChartViewModel(Colors.Blue, 0.0)
         {
             XAxisTitle = "Time delay (ns)",
             YAxisTitle = "Coincidences"
         };
-        public DataChartViewModel PEChart { get; set; } = new DataChartViewModel(Colors.Red)
+        public DataChartViewModel PEChart { get; set; } = new DataChartViewModel(Colors.Red, 5.0)
         {
             XAxisTitle = "E (μeV)",
             YAxisTitle = "p"
         };
+        #endregion
 
+        #region Status
         //Status
         private string _CountrateCh0;
         public string CountrateCh0
@@ -360,8 +367,8 @@ namespace PCFS.ViewModel
 
         }
 
-
-
+        #endregion  
+        
         //Commands
         public RelayCommand<object> OpenBinningListCommand { get; private set; }
 
@@ -508,6 +515,7 @@ namespace PCFS.ViewModel
             Step = "";
             StagePosition = "";
             RemainingTime = "";
+            ProcessedPoints = "";
         }
 
         private void OnDataChanged(object sender, DataChangedEventArgs e)

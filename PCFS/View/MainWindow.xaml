@@ -24,7 +24,7 @@
             <RowDefinition Height="0" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="5"/>
+            <RowDefinition Height="5" />
             <RowDefinition Height="100"/>
             <RowDefinition Height="0" />
         </Grid.RowDefinitions>
@@ -275,6 +275,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="150"/>
                 <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="5"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid.Resources>
@@ -297,9 +298,8 @@
             </DockPanel>
 
 
-            <v:DataChart Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" DataContext="{Binding G2Chart}"/>
-
-
+            <v:DataChart Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" DataContext="{Binding G2Chart}"/>
+            
             <Border Grid.Row="1" Grid.Column="1" BorderBrush="Black" BorderThickness="1" >
                 <DockPanel Margin="5" LastChildFill="True">
                     <Grid DockPanel.Dock="Top" DataContext="{Binding SelectedDataPoint}">
@@ -337,7 +337,10 @@
                 </DockPanel>
             </Border>
 
-            <DockPanel Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2">
+            <GridSplitter Grid.Row="1" Grid.Column="2" HorizontalAlignment="center"
+                          VerticalAlignment="Stretch" Width="5"/>
+
+            <DockPanel Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="2">
                 <StackPanel HorizontalAlignment="right" DockPanel.Dock="top" Orientation="Horizontal">
                     <TextBlock Text="Norm. Factor: "/>
                     <TextBox TextAlignment="Right" MinWidth="100" IsReadOnly="True" Text="{Binding RenormFactor}"/>
@@ -348,15 +351,16 @@
 
         </Grid>
 
-
+        
+        <GridSplitter Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="3" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+      
         <!-- MESSAGE AREA -->
-        <GridSplitter Grid.Row="3" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" VerticalAlignment="Stretch" Height="5"/>
-
         <Border Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="3" BorderBrush="Black" Background="{StaticResource BackGroundColor}">
             <ScrollViewer VerticalScrollBarVisibility="auto" Margin="0,5,0,5">
                 <TextBox Text="{Binding Messages}"/>
             </ScrollViewer>
         </Border>
+
 
     </Grid>
 </Window>

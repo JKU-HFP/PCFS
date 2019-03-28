@@ -91,7 +91,7 @@ namespace PCFS.ViewModel
                 OnPropertyChanged("YAxisMax");
             }
         }
-        
+
 
         //######################
         // Events
@@ -113,7 +113,7 @@ namespace PCFS.ViewModel
         //######################
         // Constructor
         //######################
-        public DataChartViewModel(Color color)
+        public DataChartViewModel(Color color, double pointgeometrysize)
         {
             //Bind commands
             DataPointClickCommand = new RelayCommand<ChartPoint>((p) => OnDataPointClicked(p));
@@ -135,7 +135,8 @@ namespace PCFS.ViewModel
                 Fill = new SolidColorBrush() { Opacity = 0.2, Color = color },
                 //PointForeground = new SolidColorBrush() { Color = color },
                 Stroke = new SolidColorBrush() { Color = color },
-                //LineSmoothness= 0.0, //Spline Interpolation 0 off, 1 strong
+                LineSmoothness = 0.0, //Spline Interpolation 0 off, 1 strong
+                PointGeometrySize = pointgeometrysize,
                 Values = _ChartPoints
             };
             Collection = new SeriesCollection();
