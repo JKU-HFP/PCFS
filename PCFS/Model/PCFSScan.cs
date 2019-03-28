@@ -30,7 +30,6 @@ namespace PCFS.Model
         private ITimeTagger _timeTagger;
 
         private BackgroundWorker _scanBgWorker;
-        private Stopwatch _stopwatch;
 
         DirectoryInfo _PCFSDataDirectoryInfo;
         string _PCFSDataDirectory = "";
@@ -158,7 +157,6 @@ namespace PCFS.Model
             _scanBgWorker.ProgressChanged += BgwScanProgressChanged;
             _scanBgWorker.RunWorkerCompleted += ScanCompleted;
 
-            _stopwatch = new Stopwatch();
         }
 
         public void InitializePCFSPoints()
@@ -333,15 +331,13 @@ namespace PCFS.Model
                     }
 
                     _timeTagger.StartCollectingTimeTagsAsync();
-                    _stopwatch.Restart();
 
                     //Wait for stage to arrive at target position
                     _linearStage.WaitForPos();
-                    _stopwatch.Stop();
                     _timeTagger.StopCollectingTimeTags();
                     
                     //ASYNCHRONOUSLY PROCESS DATA
-                    ProcessDataAsync(pcfsPoint, _timeTagger.GetAllTimeTags(), _stopwatch.ElapsedMilliseconds * 1000000000);
+                    ProcessDataAsync(pcfsPoint, _timeTagger.GetAllTimeTags());
 
                     CurrentStep++;
                 }
@@ -361,17 +357,23 @@ namespace PCFS.Model
             }
         }
 
-        private async void ProcessDataAsync(DataPoint currPoint, List<TimeTags> tt, long totaltime)
+        private async void ProcessDataAsync(DataPoint currPoint, List<TimeTags> tt)
         {
-            
-            await Task.Run(() =>
-            {
-                currPoint.AddMeasurement(tt, totaltime);
-                WriteDataPoint(currPoint);
-                CalculatePCFS();
-            });
 
-            lock(_processesLock)
+            if (tt.Count > 0 )
+            {
+                long totaltime = tt.Last().time.Last() - tt.First().time.First();            
+
+                await Task.Run(() =>
+                {
+                    currPoint.AddMeasurement(tt, totaltime);
+                    WriteDataPoint(currPoint);
+                    CalculatePCFS();
+                });
+
+            }
+
+            lock (_processesLock)
             {
                 ProcessedSteps++;
             }
