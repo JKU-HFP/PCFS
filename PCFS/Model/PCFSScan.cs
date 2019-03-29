@@ -388,8 +388,7 @@ namespace PCFS.Model
             CultureInfo cult = CultureInfo.InvariantCulture;
 
             string[] outputLines = new string[numLines + 1];
-
-
+            
             outputLines[0] = "Tau \t Coinc \t CoincErr \t G2 \t G2Err";
             for(int i=0; i<numLines; i++)
             {
@@ -446,13 +445,13 @@ namespace PCFS.Model
 
                 curve.AverageRelErrorG2 = curve.G2Norm.Zip(curve.G2NormErr, (g2, g2err) => g2err / g2).Average();
 
-                Complex32[] samples = curve.G2Norm.Select(p => new Complex32((float)p, 0)).ToArray();
+                Complex32[] samples = curve.G2Norm.Select(g => new Complex32((float)1.0 - (float)g, 0)).ToArray();
                 Fourier.Inverse(samples,FourierOptions.NoScaling);
 
                 //FFT Shift
                 Rotate<Complex32>(samples, FFTshift);
 
-                curve.pE = samples.Select(p => (double)p.MagnitudeSquared).ToArray();
+                curve.pE = samples.Select(p => 2.0 * (double)p.MagnitudeSquared).ToArray();
 
                 double error_PE = curve.G2Err.Select(p => p * p).Sum();
                 curve.PEErr = Enumerable.Repeat(error_PE, curve.pE.Length).ToArray();
@@ -539,7 +538,6 @@ namespace PCFS.Model
         {
             string PCFSCurvesDirectory = Directory.CreateDirectory(Path.Combine(_PCFSDataDirectory, "PCFSCurves")).ToString();
 
-            string fF = "F3";
             CultureInfo cult = CultureInfo.InvariantCulture;
 
             string filename = "";
@@ -560,14 +558,14 @@ namespace PCFS.Model
                 numLines = curve.G2.Length;
                 outstrings = new string[numLines + 2];
 
-                outstrings[0] = "Timebin: "+_PCFSCurves[i].BinningString+"\t Normalization Factor"+_PCFSCurves[i].RenormFactor.ToString(fF,cult);
+                outstrings[0] = "Timebin: "+_PCFSCurves[i].BinningString+"\t Normalization Factor"+_PCFSCurves[i].RenormFactor.ToString("0.###E+00", cult);
                 outstrings[1] = "Pos \t G2 \t G2Err \t G2Norm \t G2NormErr \t E \t pE \t pEErr";
 
                 for(int j=0; j<numLines; j++)
                 {
-                    outstrings[j + 2] = curve.positions[j].ToString(fF, cult) + "\t" + curve.G2[j].ToString(fF, cult) + "\t" + curve.G2Err[j].ToString(fF, cult) + "\t"
-                                      + curve.G2Norm[j].ToString(fF, cult) + "\t" + curve.G2NormErr[j].ToString(fF, cult) + "\t"
-                                      + curve.Energy[j].ToString(fF, cult) + "\t" + curve.pE[j].ToString(fF, cult) + "\t" + curve.PEErr[j].ToString(fF, cult);
+                    outstrings[j + 2] = curve.positions[j].ToString("F3", cult) + "\t" + curve.G2[j].ToString("F3", cult) + "\t" + curve.G2Err[j].ToString("F3", cult) + "\t"
+                                      + curve.G2Norm[j].ToString("F3", cult) + "\t" + curve.G2NormErr[j].ToString("F3", cult) + "\t"
+                                      + curve.Energy[j].ToString("F3", cult) + "\t" + curve.pE[j].ToString("F5", cult) + "\t" + curve.PEErr[j].ToString("F5", cult);
                 }
 
                 File.WriteAllLines(filename, outstrings);
