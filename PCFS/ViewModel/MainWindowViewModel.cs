@@ -280,8 +280,8 @@ namespace PCFS.ViewModel
         };
         public DataChartViewModel PEChart { get; set; } = new DataChartViewModel(Colors.Red, 5.0)
         {
-            XAxisTitle = "E (μeV)",
-            YAxisTitle = "p"
+            XAxisTitle = "ε (μeV)",
+            YAxisTitle = "p(ε)"
         };
         #endregion
 

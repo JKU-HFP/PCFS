@@ -32,6 +32,18 @@ namespace PCFS.Model
             }
         }
 
+        private double _ErrorPE;
+        public double ErrorPE
+        {
+            get { return _ErrorPE; }
+            set
+            {
+                _ErrorPE = value;
+                OnPropertyChanged("ErrorPE");
+            }
+        }
+
+
 
         //Properties
         public (long low, long high) Binning { get; set; }

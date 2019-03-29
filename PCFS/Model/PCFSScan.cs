@@ -453,8 +453,8 @@ namespace PCFS.Model
 
                 curve.pE = samples.Select(p => 2.0 * (double)p.MagnitudeSquared).ToArray();
 
-                double error_PE = curve.G2Err.Select(p => p * p).Sum();
-                curve.PEErr = Enumerable.Repeat(error_PE, curve.pE.Length).ToArray();
+                curve.ErrorPE = curve.G2Err.Select(p => p * p).Sum();
+                curve.PEErr = Enumerable.Repeat(curve.ErrorPE, curve.pE.Length).ToArray();
 
             }
 

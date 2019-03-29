@@ -367,6 +367,9 @@
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Average Rel. Error G2"/>
                         <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding AverageRelErrorG2, StringFormat=P2}"/>
 
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Error p(ε)"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ErrorPE, StringFormat=0.###E+00}"/>
+
                     </Grid>
 
                 </DockPanel>
