@@ -145,7 +145,7 @@ namespace PCFS.Model
             {
                 PacketSize = PacketSize,
                 FileName = @"C:\Users\Christian\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
-                PacketDelayTimeMilliSeonds = 50
+                PacketDelayTimeMilliSeonds = 2
             };
 
             //==============================================
@@ -289,12 +289,15 @@ namespace PCFS.Model
         {
             while(RepetionsDone < NumRepetitions)
             {
+                //Initialize new task chain
+                Task processTask = Task.Factory.StartNew(() => {});
+
                 foreach(DataPoint pcfsPoint in _DataPoints)
                 {
                     if (_scanBgWorker.CancellationPending || !_linearStage.ControllerReady || !_timeTagger.CanCollect)
                     {
                         e.Cancel = true;
-                        return;
+                        break;
                     }
 
                     //ReportProgress
@@ -335,42 +338,33 @@ namespace PCFS.Model
                     //Wait for stage to arrive at target position
                     _linearStage.WaitForPos();
                     _timeTagger.StopCollectingTimeTags();
-                    
+
                     //ASYNCHRONOUSLY PROCESS DATA
-                    ProcessDataAsync(pcfsPoint, _timeTagger.GetAllTimeTags());
+                    processTask = processTask.ContinueWith((ant) => ProcessData(pcfsPoint, _timeTagger.GetAllTimeTags()));
 
                     CurrentStep++;
                 }
+
+                //Wait for remaining datapoints to be processed
+                WriteLog("Waiting for remaining data points to be processed.");
+                processTask.Wait();
+
+                if (e.Cancel) break;
+
                 RepetionsDone++;
             }
 
-            //Wait for data processing to finish
-            while(true)
-            {
-
-                lock(_processesLock)
-                {
-                    if (ProcessedSteps >= Totalsteps) break;
-                }
-
-                Thread.Sleep(100);
-            }
         }
 
-        private async void ProcessDataAsync(DataPoint currPoint, List<TimeTags> tt)
+        private void ProcessData(DataPoint currPoint, List<TimeTags> tt)
         {
-
             if (tt.Count > 0 )
             {
                 long totaltime = tt.Last().time.Last() - tt.First().time.First();            
-
-                await Task.Run(() =>
-                {
-                    currPoint.AddMeasurement(tt, totaltime);
-                    WriteDataPoint(currPoint);
-                    CalculatePCFS();
-                });
-
+           
+                currPoint.AddMeasurement(tt, totaltime);
+                WriteDataPoint(currPoint);
+                CalculatePCFS();    
             }
 
             lock (_processesLock)
