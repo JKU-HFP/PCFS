@@ -498,6 +498,8 @@ namespace PCFS.ViewModel
             DataPoints = new ObservableCollection<DataPoint>(e.DataPoints);
             PCFSCurves = new ObservableCollection<PCFSCurve>(e.PCFSCurves);
 
+            SelectedDataPoint = null;
+            PreviewChart.Clear();
             SelectedPCFSCurve = PCFSCurves[0];
 
             Step = "";
