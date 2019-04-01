@@ -369,7 +369,7 @@ namespace PCFS.ViewModel
             OnEstimatedTotalTimeChanged();
 
             //Create Scan object
-            _pcfsScan = new PCFSScan(WriteLog);
+            _pcfsScan = new PCFSScan(WriteLog, true);
             _pcfsScan.ScanInitialized += OnScanInitialized;
             _pcfsScan.DataChanged += OnDataChanged;
             _pcfsScan.ScanProgressChanged += OnScanProgressChanged;

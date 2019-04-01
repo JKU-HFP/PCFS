@@ -55,7 +55,9 @@ namespace PCFS.Model
         public long Offset { get; set; } = 0;
         public int PacketSize { get; set; } = 5000;
         public long TimeWindow { get; private set; } = 0;
-  
+
+        public string SimulationFilesFolder { get; set; } = @"E:\PCFS\PCFSData_2019_03_29_12_07_18\Source\rename";
+
         //Linear Stage
         public double SlowVelocity { get; set; } = 0.005;
         public double FastVelocity { get; set; } = 25.0;
@@ -124,7 +126,7 @@ namespace PCFS.Model
         //#############################################
         //  C O N S T R U C T O R 
         //#############################################
-        public PCFSScan(Action<string> loggercallback)
+        public PCFSScan(Action<string> loggercallback, bool simulation=false)
         {  
             _loggerCallback = loggercallback;
 
@@ -132,23 +134,25 @@ namespace PCFS.Model
             _PCFSCurves = new List<PCFSCurve>();
 
 
-            //_linearStage = new PI_GCS2_Stage(_loggerCallback);
-            //_linearStage.Connect("C-863");
+            if(simulation)
+            {              
+                _linearStage = new SimulatedLinearStage(_loggerCallback);
+                _linearStage.Connect("");
 
-            //_timeTagger = new HydraHarpTagger(_loggerCallback);
-
-            //================ Simulations ================
-            _linearStage = new SimulatedLinearStage(_loggerCallback);
-            _linearStage.Connect("");
-
-            _timeTagger = new SimulatedTagger(_loggerCallback)
+                _timeTagger = new SimulatedTagger(_loggerCallback)
+                {
+                    PacketSize = PacketSize                 
+                };
+                _timeTagger.Connect();
+            }
+            else
             {
-                PacketSize = PacketSize,
-                FileName = @"C:\Users\Christian\Dropbox\Coding\EQKD\Testfiles\RL_correct.dat",
-                PacketDelayTimeMilliSeonds = 2
-            };
+                _linearStage = new PI_GCS2_Stage(_loggerCallback);
+                _linearStage.Connect("C-863");
 
-            //==============================================
+                _timeTagger = new HydraHarpTagger(_loggerCallback);
+                _timeTagger.Connect();
+            }
 
             _scanBgWorker = new BackgroundWorker();
             _scanBgWorker.WorkerReportsProgress = true;
@@ -287,72 +291,156 @@ namespace PCFS.Model
 
         private void DoScan(object sender, DoWorkEventArgs e)
         {
-            while(RepetionsDone < NumRepetitions)
-            {
-                //Initialize new task chain
-                Task processTask = Task.Factory.StartNew(() => {});
-
-                foreach(DataPoint pcfsPoint in _DataPoints)
+            //##################
+            // Simulated Tagger
+            //##################
+            if (_timeTagger.GetType() == typeof(SimulatedTagger))
+            {               
+                if (!Directory.Exists(SimulationFilesFolder))
                 {
-                    if (_scanBgWorker.CancellationPending || !_linearStage.ControllerReady || !_timeTagger.CanCollect)
-                    {
-                        e.Cancel = true;
-                        break;
-                    }
-
-                    //ReportProgress
-                    _scanBgWorker.ReportProgress(0,new ScanProgressChangedEventArgs()
-                    {
-                        CurrentStep = CurrentStep,
-                        TotalSteps = Totalsteps,
-                        StagePosition = pcfsPoint.StagePosition,
-                        RemainingTime = GetEstimatedTime(CurrentStep, Totalsteps, IntegrationTime)
-                    });
-
-               
-                    //Stop tagger and clear buffer
-                    _timeTagger.StopCollectingTimeTags();
-                    _timeTagger.ClearTimeTagBuffer();                    
-
-                    //Move stage in fast velocity to position
-                    _linearStage.SetVelocity(FastVelocity);
-                    _linearStage.Move_Absolute(pcfsPoint.StagePosition);
-                    _linearStage.WaitForPos();
-
-                    //Start moving stage in slow velocity & Start collecting timetags
-                    _linearStage.SetVelocity(SlowVelocity);
-                    _linearStage.Move_Relative(SlowVelocity * IntegrationTime);
-
-                    if(!String.IsNullOrEmpty(_PCFSDataDirectory) && BackupTTTRData)
-                    {
-                        string taggerbackupdirectory = Directory.CreateDirectory(Path.Combine(_PCFSDataDirectory, "TTTR_Backup")).ToString();
-                        _timeTagger.BackupFilename = Path.Combine(_PCFSDataDirectory + "\\" + taggerbackupdirectory, "TTTRBackup_Step" + CurrentStep.ToString() + ".ht2");
-                    } 
-                    else
-                    {
-                        _timeTagger.BackupFilename = "";
-                    }
-
-                    _timeTagger.StartCollectingTimeTagsAsync();
-
-                    //Wait for stage to arrive at target position
-                    _linearStage.WaitForPos();
-                    _timeTagger.StopCollectingTimeTags();
-
-                    //ASYNCHRONOUSLY PROCESS DATA
-                    processTask = processTask.ContinueWith((ant) => ProcessData(pcfsPoint, _timeTagger.GetAllTimeTags()));
-
-                    CurrentStep++;
+                    WriteLog("Folder '" + SimulationFilesFolder + " does not exist.");
+                    e.Cancel = true;
+                    return;
                 }
 
-                //Wait for remaining datapoints to be processed
-                WriteLog("Waiting for remaining data points to be processed.");
-                processTask.GetAwaiter().GetResult();
+                string[] simulatedFiles = Directory.GetFiles(SimulationFilesFolder, "*.dat", SearchOption.TopDirectoryOnly);
+                
+                if(simulatedFiles.Length<= 0)
+                {
+                    WriteLog("Folder '" + SimulationFilesFolder + " contains no valid files.");
+                    e.Cancel = true;
+                    return;
+                }
 
-                if (e.Cancel) break;
+                if(simulatedFiles.Length != NumRepetitions*NumSteps)
+                {
+                    WriteLog("Warning: Number of files ("+simulatedFiles.Length+") in folder " + SimulationFilesFolder + " does not match the total number of anticipated steps ("+ NumRepetitions * NumSteps+").");
+                }
 
-                RepetionsDone++;
+                SimulatedTagger simTagger = (SimulatedTagger)_timeTagger;
+                simTagger.PacketSize = 10000;
+
+                Stopwatch stopWatch = new Stopwatch();
+                List<long> stoppedMilliseconds = new List<long>();
+                int estimatedRemainingSeconds = 0;
+
+                while(RepetionsDone < NumRepetitions)
+                {
+                    foreach (DataPoint pcfsPoint in _DataPoints)
+                    {
+                        if (_scanBgWorker.CancellationPending || !_timeTagger.CanCollect || CurrentStep>=simulatedFiles.Length)
+                        {
+                            e.Cancel = true;
+                            break;
+                        }
+
+                        //ReportProgress
+                        _scanBgWorker.ReportProgress(0, new ScanProgressChangedEventArgs()
+                        {
+                            CurrentStep = CurrentStep,
+                            TotalSteps = Totalsteps,
+                            StagePosition = pcfsPoint.StagePosition,
+                            RemainingTime = new TimeSpan(0, 0, estimatedRemainingSeconds)
+                        });
+
+                        stopWatch.Restart();
+
+                        //Stop tagger and clear buffer
+                        simTagger.StopCollectingTimeTags();
+                        simTagger.ClearTimeTagBuffer();
+
+                        simTagger.FileName = simulatedFiles[CurrentStep];
+                        simTagger.StartCollectingTimeTagsAsync().GetAwaiter().GetResult(); //Collect all timetags in file;
+
+                        //Process data
+                        ProcessData(pcfsPoint, _timeTagger.GetAllTimeTags());
+
+                        CurrentStep++;
+
+                        //Remaining time estimation
+                        stopWatch.Stop();
+                        stoppedMilliseconds.Add(stopWatch.ElapsedMilliseconds);
+                        estimatedRemainingSeconds = (int)((stoppedMilliseconds.Average() / 1000.0) * (Totalsteps - CurrentStep));                    
+                    }
+
+                    RepetionsDone++;
+                }
+
             }
+            //##############
+            // Real Tagger 
+            //##############
+            else
+            {
+                while(RepetionsDone < NumRepetitions)
+                {
+                    //Initialize new task chain
+                    Task processTask = Task.Factory.StartNew(() => {});
+
+                    foreach(DataPoint pcfsPoint in _DataPoints)
+                    {
+                        if (_scanBgWorker.CancellationPending || !_linearStage.ControllerReady || !_timeTagger.CanCollect)
+                        {
+                            e.Cancel = true;
+                            break;
+                        }
+
+                        //ReportProgress
+                        _scanBgWorker.ReportProgress(0,new ScanProgressChangedEventArgs()
+                        {
+                            CurrentStep = CurrentStep,
+                            TotalSteps = Totalsteps,
+                            StagePosition = pcfsPoint.StagePosition,
+                            RemainingTime = GetEstimatedTime(CurrentStep, Totalsteps, IntegrationTime)
+                        });
+
+               
+                        //Stop tagger and clear buffer
+                        _timeTagger.StopCollectingTimeTags();
+                        _timeTagger.ClearTimeTagBuffer();                    
+
+                        //Move stage in fast velocity to position
+                        _linearStage.SetVelocity(FastVelocity);
+                        _linearStage.Move_Absolute(pcfsPoint.StagePosition);
+                        _linearStage.WaitForPos();
+
+                        //Start moving stage in slow velocity & Start collecting timetags
+                        _linearStage.SetVelocity(SlowVelocity);
+                        _linearStage.Move_Relative(SlowVelocity * IntegrationTime);
+
+                        if(!String.IsNullOrEmpty(_PCFSDataDirectory) && BackupTTTRData)
+                        {
+                            string taggerbackupdirectory = Directory.CreateDirectory(Path.Combine(_PCFSDataDirectory, "TTTR_Backup")).ToString();
+                            _timeTagger.BackupFilename = Path.Combine(_PCFSDataDirectory + "\\" + taggerbackupdirectory, "TTTRBackup_Step" + CurrentStep.ToString("0000") + ".ht2");
+                        } 
+                        else
+                        {
+                            _timeTagger.BackupFilename = "";
+                        }
+
+                        _timeTagger.StartCollectingTimeTagsAsync();
+
+                        //Wait for stage to arrive at target position
+                        _linearStage.WaitForPos();
+                        _timeTagger.StopCollectingTimeTags();
+
+                        //ASYNCHRONOUSLY PROCESS DATA
+                        processTask = processTask.ContinueWith((ant) => ProcessData(pcfsPoint, _timeTagger.GetAllTimeTags()));
+
+                        CurrentStep++;
+                    }
+
+                    //Wait for remaining datapoints to be processed
+                    WriteLog("Waiting for remaining data points to be processed.");
+                    processTask.GetAwaiter().GetResult();
+
+                    if (e.Cancel) break;
+
+                    RepetionsDone++;
+                }
+
+            }
+
 
         }
 
