@@ -347,7 +347,7 @@ namespace PCFS.Model
 
                 //Wait for remaining datapoints to be processed
                 WriteLog("Waiting for remaining data points to be processed.");
-                processTask.Wait();
+                processTask.GetAwaiter().GetResult();
 
                 if (e.Cancel) break;
 
