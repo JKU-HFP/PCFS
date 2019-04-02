@@ -30,7 +30,7 @@ namespace PCFS.Model
         private ITimeTagger _timeTagger;
 
         private BackgroundWorker _scanBgWorker;
-
+   
         DirectoryInfo _PCFSDataDirectoryInfo;
         string _PCFSDataDirectory = "";
 
@@ -56,7 +56,7 @@ namespace PCFS.Model
         public int PacketSize { get; set; } = 5000;
         public long TimeWindow { get; private set; } = 0;
 
-        public string SimulationFilesFolder { get; set; } = @"E:\PCFS\PCFSData_2019_03_29_12_07_18\Source\rename";
+        public string SimulationFilesFolder { get; private set; } = "";
 
         //Linear Stage
         public double SlowVelocity { get; set; } = 0.005;
@@ -70,7 +70,7 @@ namespace PCFS.Model
         public double IntegrationTime { get; set; } = 10.0;
         public int NumRepetitions { get; set; } = 4;
         public bool RenormalizeG2 { get; set; } = true;
-        public string BinningListFilename { get; set; } = "";
+        public string BinningListFile { get; set; } = "";
         public string BackupDirectory { get; set; } = "";
         public bool BackupTTTRData { get; set; } = false;
 
@@ -126,15 +126,17 @@ namespace PCFS.Model
         //#############################################
         //  C O N S T R U C T O R 
         //#############################################
-        public PCFSScan(Action<string> loggercallback, bool simulation=false)
+        public PCFSScan(Action<string> loggercallback, string simfilefolder="")
         {  
             _loggerCallback = loggercallback;
 
             _DataPoints = new List<DataPoint> { };
             _PCFSCurves = new List<PCFSCurve>();
 
+            SimulationFilesFolder = simfilefolder;
 
-            if(simulation)
+            //Simulation with SimulatedTimeTagger
+            if(!string.IsNullOrEmpty(simfilefolder))
             {              
                 _linearStage = new SimulatedLinearStage(_loggerCallback);
                 _linearStage.Connect("");
@@ -145,6 +147,7 @@ namespace PCFS.Model
                 };
                 _timeTagger.Connect();
             }
+            //Real measurement with TimeTagger
             else
             {
                 _linearStage = new PI_GCS2_Stage(_loggerCallback);
@@ -167,12 +170,12 @@ namespace PCFS.Model
         {
 
             //Get Binning List
-            if(!File.Exists(BinningListFilename))
+            if(!File.Exists(BinningListFile))
             {
                 WriteLog("Binning list file does not exist.");
                 return;
             }
-            _binningList = GetBinningList(BinningListFilename);
+            _binningList = GetBinningList(BinningListFile);
 
             //Set TimeTagger
             _timeTagger.PacketSize = PacketSize;
@@ -282,7 +285,9 @@ namespace PCFS.Model
 
             string backupDir = string.IsNullOrEmpty(BackupDirectory) ? "" : BackupDirectory + "\\";
             _PCFSDataDirectoryInfo = Directory.CreateDirectory(backupDir+"PCFSData_" + StartScanTime.ToString("yyyy_MM_dd_HH_mm_ss"));
-            _PCFSDataDirectory = _PCFSDataDirectoryInfo.ToString();         
+            _PCFSDataDirectory = _PCFSDataDirectoryInfo.ToString();
+            //Copy binning list
+            File.Copy(BinningListFile, Path.Combine(_PCFSDataDirectory, "BinningMask.bm"),true);
 
             WriteLog("Start scanning. Files saved to "+_PCFSDataDirectoryInfo.FullName);
 
@@ -378,7 +383,7 @@ namespace PCFS.Model
                     Task processTask = Task.Factory.StartNew(() => {});
 
                     foreach(DataPoint pcfsPoint in _DataPoints)
-                    {
+                    {                                              
                         if (_scanBgWorker.CancellationPending || !_linearStage.ControllerReady || !_timeTagger.CanCollect)
                         {
                             e.Cancel = true;
@@ -592,7 +597,8 @@ namespace PCFS.Model
 
             WriteLog("Total scantime: "+TotalScanTime.ToString("hh\\:mm\\:ss"));
             WriteParameters();
-            WritePCFSCurves();
+
+            if(_PCFSCurves[0].G2!=null) WritePCFSCurves();
         }
 
         private void WriteParameters()
@@ -604,12 +610,13 @@ namespace PCFS.Model
 
             string[] filestring = new string[]{
                                  "Fast velocity:\t" + FastVelocity.ToString(fF, cult),
-                                 "Slow velocity:\t" + SlowVelocity.ToString(fF, cult),
+                                 "Slow velocity:\t" + SlowVelocity.ToString("0.###E+00", cult),
                                  "Min. Position:\t" + MinPosition.ToString(fF, cult),
                                  "Max. Position:\t" + MaxPosition.ToString(fF, cult),
                                  "Number of Steps:\t" + NumSteps.ToString(),
                                  "Stepwidth:\t" + StepWidth.ToString(fF, cult),
                                  "Integration Time:\t" + IntegrationTime.ToString(),
+                                 "Repetitions:\t" + NumRepetitions.ToString(),
                                  "Total Scan Time:\t" + TotalScanTime.ToString("hh\\:mm\\:ss")
                                   };
 

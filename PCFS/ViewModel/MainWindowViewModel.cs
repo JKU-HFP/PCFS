@@ -369,7 +369,7 @@ namespace PCFS.ViewModel
             OnEstimatedTotalTimeChanged();
 
             //Create Scan object
-            _pcfsScan = new PCFSScan(WriteLog, true);
+            _pcfsScan = new PCFSScan(WriteLog, @"E:\PCFS\PCFSData_2019_03_27_13_29_22\Source");
             _pcfsScan.ScanInitialized += OnScanInitialized;
             _pcfsScan.DataChanged += OnDataChanged;
             _pcfsScan.ScanProgressChanged += OnScanProgressChanged;
@@ -428,7 +428,7 @@ namespace PCFS.ViewModel
                 _pcfsScan.IntegrationTime = IntegrationTime;
                 _pcfsScan.NumRepetitions = Repetitions;
 
-                _pcfsScan.BinningListFilename = BinningListFilename;
+                _pcfsScan.BinningListFile = BinningListFilename;
 
                 _pcfsScan.InitializePCFSPoints();
             },
