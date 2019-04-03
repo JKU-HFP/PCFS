@@ -52,10 +52,18 @@ namespace PCFS.Model
         {
             get
             {
-                return FormattedTime(Binning.low) + " - " + FormattedTime(Binning.high);
+                return FormattedTime(Binning.low,false) + " - " + FormattedTime(Binning.high,false);
             }
         }
-        
+
+        public string BinningStringUnicode
+        {
+            get
+            {
+                return FormattedTime(Binning.low, true) + " - " + FormattedTime(Binning.high, true);
+            }
+        }
+
         public double[] positions { get; set; }
         public double[] G2 { get; set; }
         public double[] G2Err { get; set; }
@@ -78,10 +86,10 @@ namespace PCFS.Model
 
         }
         
-        public static string FormattedTime(long time)
+        public static string FormattedTime(long time, bool unicode)
         {
             if (Math.Abs(time) >= 1000000000) return (time / 1000000000).ToString()+" ms";
-            if (Math.Abs(time) >= 1000000) return (time / 1000000).ToString() + " μs";
+            if (Math.Abs(time) >= 1000000) return (time / 1000000).ToString() + (unicode ? "us" : " μs");
             if (Math.Abs(time) >= 1000) return (time / 1000).ToString() + " ns";
 
             return time.ToString() + "ps";

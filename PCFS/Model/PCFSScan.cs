@@ -12,6 +12,7 @@ using System.Diagnostics;
 using MathNet.Numerics;
 using MathNet.Numerics.IntegralTransforms;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace PCFS.Model
 {
@@ -294,6 +295,17 @@ namespace PCFS.Model
             _scanBgWorker.RunWorkerAsync();
         }
 
+        public static IEnumerable<T> OrderByNatural<T>(IEnumerable<T> items, Func<T, string> selector, StringComparer stringComparer = null)
+        {
+            var regex = new Regex(@"\d+", RegexOptions.Compiled);
+
+            int maxDigits = items
+                          .SelectMany(i => regex.Matches(selector(i)).Cast<Match>().Select(digitChunk => (int?)digitChunk.Value.Length))
+                          .Max() ?? 0;
+
+            return items.OrderBy(i => regex.Replace(selector(i), match => match.Value.PadLeft(maxDigits, '0')), stringComparer ?? StringComparer.CurrentCulture);
+        }
+
         private void DoScan(object sender, DoWorkEventArgs e)
         {
             //##################
@@ -322,6 +334,8 @@ namespace PCFS.Model
                     WriteLog("Warning: Number of files ("+simulatedFiles.Length+") in folder " + SimulationFilesFolder + " does not match the total number of anticipated steps ("+ NumRepetitions * NumSteps+").");
                 }
 
+                string[] sortedSimulatedFiles = OrderByNatural(simulatedFiles, p => p).ToArray();
+
                 SimulatedTagger simTagger = (SimulatedTagger)_timeTagger;
                 simTagger.PacketSize = 10000;
 
@@ -333,7 +347,7 @@ namespace PCFS.Model
                 {
                     foreach (DataPoint pcfsPoint in _DataPoints)
                     {
-                        if (_scanBgWorker.CancellationPending || !_timeTagger.CanCollect || CurrentStep>=simulatedFiles.Length)
+                        if (_scanBgWorker.CancellationPending || !_timeTagger.CanCollect || CurrentStep>= sortedSimulatedFiles.Length)
                         {
                             e.Cancel = true;
                             break;
@@ -354,7 +368,7 @@ namespace PCFS.Model
                         simTagger.StopCollectingTimeTags();
                         simTagger.ClearTimeTagBuffer();
 
-                        simTagger.FileName = simulatedFiles[CurrentStep];
+                        simTagger.FileName = sortedSimulatedFiles[CurrentStep];
                         simTagger.StartCollectingTimeTagsAsync().GetAwaiter().GetResult(); //Collect all timetags in file;
 
                         //Process data
@@ -647,7 +661,7 @@ namespace PCFS.Model
                 numLines = curve.G2.Length;
                 outstrings = new string[numLines + 2];
 
-                outstrings[0] = "Timebin: "+_PCFSCurves[i].BinningString+"\t Normalization Factor"+_PCFSCurves[i].RenormFactor.ToString("0.###E+00", cult);
+                outstrings[0] = "Timebin: "+_PCFSCurves[i].BinningStringUnicode+"\t Normalization Factor: "+_PCFSCurves[i].RenormFactor.ToString("0.###E+00", cult);
                 outstrings[1] = "Pos \t G2 \t G2Err \t G2Norm \t G2NormErr \t E \t pE \t pEErr";
 
                 for(int j=0; j<numLines; j++)
