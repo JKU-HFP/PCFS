@@ -432,7 +432,7 @@ namespace PCFS.Model
                         if(!String.IsNullOrEmpty(_PCFSDataDirectory) && BackupTTTRData)
                         {
                             string taggerbackupdirectory = Directory.CreateDirectory(Path.Combine(_PCFSDataDirectory, "TTTR_Backup")).ToString();
-                            _timeTagger.BackupFilename = Path.Combine(_PCFSDataDirectory + "\\" + taggerbackupdirectory, "TTTRBackup_Step" + CurrentStep.ToString("0000") + ".ht2");
+                            _timeTagger.BackupFilename = Path.Combine(_PCFSDataDirectory + "\\" + taggerbackupdirectory, "TTTRBackup_Step" + CurrentStep.ToString());
                         } 
                         else
                         {
