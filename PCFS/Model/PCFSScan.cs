@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using TimeTagger_Library;
+using TimeTagger_Library.TimeTagger;
+using TimeTagger_Library.Correlation;
 using System.ComponentModel;
 using System.Diagnostics;
 using MathNet.Numerics;
@@ -154,7 +156,7 @@ namespace PCFS.Model
                 _linearStage = new PI_GCS2_Stage(_loggerCallback);
                 _linearStage.Connect("C-863");
 
-                _timeTagger = new HydraHarpTagger(_loggerCallback);
+                _timeTagger = new HydraHarp(_loggerCallback);
                 _timeTagger.Connect();
             }
 

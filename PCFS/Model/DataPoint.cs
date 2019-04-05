@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TimeTagger_Library;
+using TimeTagger_Library.Correlation;
 
 namespace PCFS.Model
 {
