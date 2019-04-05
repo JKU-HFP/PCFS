@@ -446,7 +446,8 @@ namespace PCFS.Model
                         _timeTagger.StopCollectingTimeTags();
 
                         //ASYNCHRONOUSLY PROCESS DATA
-                        processTask = processTask.ContinueWith((ant) => ProcessData(pcfsPoint, _timeTagger.GetAllTimeTags()));
+                        List<TimeTags> tt = _timeTagger.GetAllTimeTags();
+                        processTask = processTask.ContinueWith((ant) => ProcessData(pcfsPoint,tt));
 
                         CurrentStep++;
                     }
@@ -599,6 +600,9 @@ namespace PCFS.Model
         private void ScanCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             ScanInProgress = false;
+
+            //Capture error
+            if(e.Error!=null) throw e.Error;
 
             if(e.Cancelled)
             {

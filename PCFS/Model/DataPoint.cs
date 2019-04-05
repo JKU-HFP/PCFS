@@ -117,8 +117,9 @@ namespace PCFS.Model
 
             //Setup G2 Preview Correlator
             ulong previewTimeWindow = 100000;
+            long previewResolution = 256;
 
-            Histogram g2previewGroup = new Histogram(binningListHistogram.CorrelationConfig, previewTimeWindow, 256);
+            Histogram g2previewGroup = new Histogram(binningListHistogram.CorrelationConfig, previewTimeWindow, previewResolution);
             _G2PreviewCorrelator = new Kurolator(new List<CorrelationGroup> { g2previewGroup }, previewTimeWindow);
 
             HistogramX = _PCFSCorrelator[0].Histogram_X;
