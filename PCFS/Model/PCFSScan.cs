@@ -15,6 +15,7 @@ using MathNet.Numerics;
 using MathNet.Numerics.IntegralTransforms;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Stage_Library;
 
 namespace PCFS.Model
 {

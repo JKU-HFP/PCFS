@@ -1,19 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.271
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.452
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PCFS", "PCFS\PCFS.csproj", "{767F2A3C-BA7A-48A8-B066-7C4A3F5532F3}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "TimeTagger_Library", "..\ProjectLibrary\TimeTagger_Library\TimeTagger_Library.shproj", "{721AF447-1302-4AF1-BC15-B3D878AFBBF8}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "PIStage_Library", "..\ProjectLibrary\PIStage_Library\PIStage_Library.shproj", "{0B5D0D8A-5582-4B51-8DEF-7CA977E8E1EB}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Stage_Library", "..\ProjectLibrary\Stage_Library\Stage_Library.shproj", "{105B3F84-F045-4EC7-B75C-DE9A85F2D3E9}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		..\ProjectLibrary\PIStage_Library\PIStage_Library.projitems*{0b5d0d8a-5582-4b51-8def-7ca977e8e1eb}*SharedItemsImports = 13
+		..\ProjectLibrary\Stage_Library\Stage_Library.projitems*{105b3f84-f045-4ec7-b75c-de9a85f2d3e9}*SharedItemsImports = 13
 		..\ProjectLibrary\TimeTagger_Library\TimeTagger_Library.projitems*{721af447-1302-4af1-bc15-b3d878afbbf8}*SharedItemsImports = 13
-		..\ProjectLibrary\PIStage_Library\PIStage_Library.projitems*{767f2a3c-ba7a-48a8-b066-7c4a3f5532f3}*SharedItemsImports = 4
+		..\ProjectLibrary\Stage_Library\Stage_Library.projitems*{767f2a3c-ba7a-48a8-b066-7c4a3f5532f3}*SharedItemsImports = 4
 		..\ProjectLibrary\TimeTagger_Library\TimeTagger_Library.projitems*{767f2a3c-ba7a-48a8-b066-7c4a3f5532f3}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
