@@ -77,6 +77,7 @@ namespace PCFS.Model
         public string BinningListFile { get; set; } = "";
         public string BackupDirectory { get; set; } = "";
         public bool BackupTTTRData { get; set; } = false;
+        public int RenormalizePercent { get; set; } = 20;
 
         public int CurrentStep { get; private set; } = 0;
         public int ProcessedSteps { get; private set; } = 0;
@@ -537,7 +538,10 @@ namespace PCFS.Model
             {
                 if(RenormalizeG2)
                 {
-                    curve.RenormFactor = 1/curve.G2.LastOrDefault();
+                    int renormMinIndex = (int)(NumSteps * (100 - RenormalizePercent) / 100.0);
+                    if (renormMinIndex < 0 || renormMinIndex >= NumSteps || curve.G2.Length <= renormMinIndex) curve.RenormFactor = 1.0;
+                    else curve.RenormFactor = 1 / curve.G2.Skip(renormMinIndex).Average();
+
                     curve.G2Norm = curve.G2.Select(p => p * curve.RenormFactor).ToArray();
                     curve.G2NormErr = curve.G2Err.Select(p => p * curve.RenormFactor).ToArray();
                 }

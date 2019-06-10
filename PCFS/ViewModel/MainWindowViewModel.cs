@@ -218,6 +218,18 @@ namespace PCFS.ViewModel
             }
         }
 
+        private int _renormalizePercent = 20;
+        public int RenormalizePercent
+        {
+            get { return _renormalizePercent; }
+            set
+            {
+                _renormalizePercent = value;
+                OnPropertyChanged("RenormalizePercent");
+            }
+        }
+
+
         #endregion
 
         #region Data
@@ -429,6 +441,8 @@ namespace PCFS.ViewModel
                 _pcfsScan.NumRepetitions = Repetitions;
 
                 _pcfsScan.BinningListFile = BinningListFilename;
+
+                _pcfsScan.RenormalizePercent = RenormalizePercent;
 
                 _pcfsScan.InitializePCFSPoints();
             },
