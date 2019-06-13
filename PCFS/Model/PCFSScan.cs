@@ -38,6 +38,8 @@ namespace PCFS.Model
         DirectoryInfo _PCFSDataDirectoryInfo;
         string _PCFSDataDirectory = "";
 
+        double _currentPosition = 0.0;
+
         private object _processesLock = new object();
 
         //#################################
@@ -49,7 +51,7 @@ namespace PCFS.Model
         public bool ScanPointsInitialized { get; private set; } = false;
         public bool DataAvailable { get; private set; } = false;
         public bool ScanInProgress { get; private set; } = false;
-        public int RepetionsDone { get; private set; } = 0;
+        public int RepetitionsDone { get; private set; } = 0;
         public DateTime StartScanTime;
         public TimeSpan TotalScanTime;
 
@@ -171,6 +173,37 @@ namespace PCFS.Model
 
         }
 
+        public void AddRepetition()
+        {
+            if (!ScanInProgress) return;
+            NumRepetitions++;
+
+            OnScanProgressChanged(new ScanProgressChangedEventArgs()
+            {
+                CurrentStep = CurrentStep,
+                TotalSteps = Totalsteps,
+                StagePosition = _currentPosition,
+                RemainingTime = GetEstimatedTime(CurrentStep, Totalsteps, IntegrationTime)
+            });
+        }
+
+        public void RemoveRepetition()
+        {
+            if (!ScanInProgress) return;
+            if ((NumRepetitions - 1) <= RepetitionsDone) return;
+
+            NumRepetitions--;
+
+            OnScanProgressChanged(new ScanProgressChangedEventArgs()
+            {
+                CurrentStep = CurrentStep,
+                TotalSteps = Totalsteps,
+                StagePosition = _currentPosition,
+                RemainingTime = GetEstimatedTime(CurrentStep, Totalsteps, IntegrationTime)
+            });
+        }
+        
+
         public void InitializePCFSPoints()
         {
 
@@ -191,7 +224,7 @@ namespace PCFS.Model
             TimeWindow = Math.Abs(_binningList.Max(p => p.high) - _binningList.Min(p => p.low));
 
             //Reset Status variables
-            RepetionsDone = 0;
+            RepetitionsDone = 0;
             DataAvailable = false;
             ProcessedSteps = 0;
             CurrentStep = 0;
@@ -347,7 +380,7 @@ namespace PCFS.Model
                 List<long> stoppedMilliseconds = new List<long>();
                 int estimatedRemainingSeconds = 0;
 
-                while(RepetionsDone < NumRepetitions)
+                while(RepetitionsDone < NumRepetitions)
                 {
                     foreach (DataPoint pcfsPoint in _DataPoints)
                     {
@@ -358,11 +391,13 @@ namespace PCFS.Model
                         }
 
                         //ReportProgress
+                        _currentPosition = pcfsPoint.StagePosition;
+
                         _scanBgWorker.ReportProgress(0, new ScanProgressChangedEventArgs()
                         {
                             CurrentStep = CurrentStep,
                             TotalSteps = Totalsteps,
-                            StagePosition = pcfsPoint.StagePosition,
+                            StagePosition = _currentPosition,
                             RemainingTime = new TimeSpan(0, 0, estimatedRemainingSeconds)
                         });
 
@@ -386,7 +421,7 @@ namespace PCFS.Model
                         estimatedRemainingSeconds = (int)((stoppedMilliseconds.Average() / 1000.0) * (Totalsteps - CurrentStep));                    
                     }
 
-                    RepetionsDone++;
+                    RepetitionsDone++;
                 }
 
             }
@@ -395,7 +430,7 @@ namespace PCFS.Model
             //##############
             else
             {
-                while(RepetionsDone < NumRepetitions)
+                while(RepetitionsDone < NumRepetitions)
                 {
                     //Initialize new task chain
                     Task processTask = Task.Factory.StartNew(() => {});
@@ -409,11 +444,13 @@ namespace PCFS.Model
                         }
 
                         //ReportProgress
+                        _currentPosition = pcfsPoint.StagePosition;
+
                         _scanBgWorker.ReportProgress(0,new ScanProgressChangedEventArgs()
                         {
                             CurrentStep = CurrentStep,
                             TotalSteps = Totalsteps,
-                            StagePosition = pcfsPoint.StagePosition,
+                            StagePosition = _currentPosition,
                             RemainingTime = GetEstimatedTime(CurrentStep, Totalsteps, IntegrationTime)
                         });
 
@@ -460,7 +497,7 @@ namespace PCFS.Model
 
                     if (e.Cancel) break;
 
-                    RepetionsDone++;
+                    RepetitionsDone++;
                 }
 
             }

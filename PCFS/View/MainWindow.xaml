@@ -215,6 +215,7 @@
                 <ColumnDefinition Width="400"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
             <Grid Grid.Row="0" Grid.Column="0">
@@ -239,7 +240,25 @@
                            FontWeight="Bold" FontSize="20" Text="{Binding CountrateCh1}"/>
 
             </Grid>
-            
+
+            <!-- Change repetitions -->
+            <Grid Margin="5" Grid.Row="0" Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <Button Grid.Row="0" Grid.Column="0" Content="+" Command="{Binding AddRepetitionCommand}"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Repetitions"/>
+                <Button Grid.Row="2" Grid.Column="0" Content="-" Command="{Binding RemoveRepetitionCommand}"/>
+                
+            </Grid>
+
+
             <!-- Scan Progress-->
             <Grid Margin="5" Grid.Row="0" Grid.Column="3">
                 <Grid.RowDefinitions>

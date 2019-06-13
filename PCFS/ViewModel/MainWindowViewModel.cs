@@ -375,6 +375,9 @@ namespace PCFS.ViewModel
         public RelayCommand<object> StartScanCommand { get; private set; }
         public RelayCommand<object> StopScanCommand { get; private set; }
 
+        public RelayCommand<object> AddRepetitionCommand { get; private set; }
+        public RelayCommand<object> RemoveRepetitionCommand { get; private set; }
+
         public MainWindowViewModel()
         {                     
             OnStepWidthChanged();
@@ -463,6 +466,20 @@ namespace PCFS.ViewModel
                 _pcfsScan.StopScan();
             });
 
+            AddRepetitionCommand = new RelayCommand<object>(o =>
+            {
+                _pcfsScan.AddRepetition();
+            },
+            o => _pcfsScan.ScanInProgress
+            ) ;
+
+            RemoveRepetitionCommand = new RelayCommand<object>(o =>
+            {
+                _pcfsScan.RemoveRepetition();
+            },
+            o => _pcfsScan.ScanInProgress && ((_pcfsScan.NumRepetitions - 1) > _pcfsScan.RepetitionsDone)
+            );
+            
 
             //Setup timer
             _CountrateTimer = new Timer();
