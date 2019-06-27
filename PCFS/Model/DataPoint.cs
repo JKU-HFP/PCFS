@@ -131,18 +131,24 @@ namespace PCFS.Model
         public void AddMeasurement(List<TimeTags> timetags, long integrationTime)
         {
             TotalTime += integrationTime;
-         
+
+            List<Task> addCorrTasks = new List<Task>();
+
             foreach(TimeTags tt in timetags)
             {
                 TotalCountsCh0 += tt.TotalCounts[_chan0];
                 TotalCountsCh1 += tt.TotalCounts[_chan1];
 
-                _PCFSCorrelator.AddCorrelations(tt, tt, OffsetCh1);
-                _PCFSCorrelator[0].ClearAllCorrelations(); //Clear correlations to save memory
-
-                _G2PreviewCorrelator.AddCorrelations(tt, tt, OffsetCh1);
-                //_G2PreviewCorrelator[0].ClearAllCorrelations(); //Clear correlations to save memory
+                //Parallel computing of all coincidences
+                addCorrTasks.Add(Task.Run(() =>
+                   {
+                       _PCFSCorrelator.AddCorrelations(tt, tt, OffsetCh1);
+                       _G2PreviewCorrelator.AddCorrelations(tt, tt, OffsetCh1);
+                   }));                    
             }
+
+            //Wait for all correlation computing tasks
+            Task.WhenAll(addCorrTasks).GetAwaiter().GetResult();
 
             //Histograms and Normalization
             NormalizationFactor = TotalTime / ((double)TotalCountsCh0 * (double)TotalCountsCh1);
