@@ -71,6 +71,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Model\Extensions.cs" />
     <Compile Include="ViewModel\DataChartViewModel.cs" />
     <Page Include="View\DataChart.xaml">
       <SubType>Designer</SubType>

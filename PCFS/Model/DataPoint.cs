@@ -132,23 +132,31 @@ namespace PCFS.Model
         {
             TotalTime += integrationTime;
 
-            List<Task> addCorrTasks = new List<Task>();
-
-            foreach(TimeTags tt in timetags)
+            foreach (TimeTags tt in timetags)
             {
                 TotalCountsCh0 += tt.TotalCounts[_chan0];
                 TotalCountsCh1 += tt.TotalCounts[_chan1];
-
-                //Parallel computing of all coincidences
-                addCorrTasks.Add(Task.Run(() =>
-                   {
-                       _PCFSCorrelator.AddCorrelations(tt, tt, OffsetCh1);
-                       _G2PreviewCorrelator.AddCorrelations(tt, tt, OffsetCh1);
-                   }));                    
             }
 
-            //Wait for all correlation computing tasks
-            Task.WhenAll(addCorrTasks).GetAwaiter().GetResult();
+            var splittedTagLists = timetags.ChunkBy(timetags.Count / 1);
+            List<Task> correlationTasks = new List<Task>();
+
+            foreach (var taglist in splittedTagLists)
+            {
+                correlationTasks.Add(Task.Run(() =>
+                {
+                    foreach (TimeTags tt in taglist)
+                    {
+                        _PCFSCorrelator.AddCorrelations(tt, tt, OffsetCh1);
+                        _PCFSCorrelator[0].ClearAllCorrelations(); //Clear correlations to save memory
+
+                        _G2PreviewCorrelator.AddCorrelations(tt, tt, OffsetCh1);
+                        //_G2PreviewCorrelator[0].ClearAllCorrelations(); //Clear correlations to save memory
+                    }
+                }));
+            }
+
+            Task.WhenAll(correlationTasks).GetAwaiter().GetResult();
 
             //Histograms and Normalization
             NormalizationFactor = TotalTime / ((double)TotalCountsCh0 * (double)TotalCountsCh1);
