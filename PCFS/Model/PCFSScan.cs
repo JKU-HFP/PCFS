@@ -16,6 +16,7 @@ using MathNet.Numerics.IntegralTransforms;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Stage_Library;
+using Stage_Library.NewPort;
 
 namespace PCFS.Model
 {
@@ -170,6 +171,11 @@ namespace PCFS.Model
             _scanBgWorker.DoWork += DoScan;
             _scanBgWorker.ProgressChanged += BgwScanProgressChanged;
             _scanBgWorker.RunWorkerCompleted += ScanCompleted;
+
+
+            //Newport stage test
+            SMC100Controller smccont = new SMC100Controller();
+            string[] devices = smccont.GetDevices();
 
         }
 
