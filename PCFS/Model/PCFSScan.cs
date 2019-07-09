@@ -174,9 +174,12 @@ namespace PCFS.Model
 
 
             //Newport stage test
-            SMC100Controller smccont = new SMC100Controller();
-            string[] devices = smccont.GetDevices();
+            SMC100Controller smccont = new SMC100Controller(_loggerCallback);
+            string[] devices = smccont.GetComPorts();
+            bool success = smccont.Connect("COM4");
 
+            var stage1 = smccont[2];
+     
         }
 
         public void AddRepetition()
