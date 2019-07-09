@@ -138,7 +138,7 @@ namespace PCFS.Model
                 TotalCountsCh1 += tt.TotalCounts[_chan1];
             }
 
-            var splittedTagLists = timetags.ChunkBy(timetags.Count / 1);
+            var splittedTagLists = timetags.ChunkBy(timetags.Count / 4);
             List<Task> correlationTasks = new List<Task>();
 
             foreach (var taglist in splittedTagLists)
