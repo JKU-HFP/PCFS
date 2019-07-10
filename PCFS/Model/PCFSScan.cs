@@ -17,6 +17,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using Stage_Library;
 using Stage_Library.NewPort;
+using Stage_Library.Thorlabs;
 
 namespace PCFS.Model
 {
@@ -171,15 +172,6 @@ namespace PCFS.Model
             _scanBgWorker.DoWork += DoScan;
             _scanBgWorker.ProgressChanged += BgwScanProgressChanged;
             _scanBgWorker.RunWorkerCompleted += ScanCompleted;
-
-
-            //Newport stage test
-            SMC100Controller smccont = new SMC100Controller(_loggerCallback);
-            string[] devices = smccont.GetComPorts();
-            bool success = smccont.Connect("COM4");
-
-            var stage1 = smccont[2];
-     
         }
 
         public void AddRepetition()
