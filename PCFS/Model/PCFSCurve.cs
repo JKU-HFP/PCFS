@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PCFS.Model
 {
@@ -52,7 +48,7 @@ namespace PCFS.Model
         {
             get
             {
-                return FormattedTime(Binning.low,false) + " - " + FormattedTime(Binning.high,false);
+                return FormattedTime(Binning.low, false) + " - " + FormattedTime(Binning.high, false);
             }
         }
 
@@ -85,10 +81,10 @@ namespace PCFS.Model
         {
 
         }
-        
+
         public static string FormattedTime(long time, bool unicode)
         {
-            if (Math.Abs(time) >= 1000000000) return (time / 1000000000).ToString()+" ms";
+            if (Math.Abs(time) >= 1000000000) return (time / 1000000000).ToString() + " ms";
             if (Math.Abs(time) >= 1000000) return (time / 1000000).ToString() + (unicode ? "us" : " μs");
             if (Math.Abs(time) >= 1000) return (time / 1000).ToString() + " ns";
 

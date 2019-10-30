@@ -1,5 +1,4 @@
-﻿using PIStage_Library;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,8 +15,7 @@ using MathNet.Numerics.IntegralTransforms;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Stage_Library;
-using Stage_Library.NewPort;
-using Stage_Library.Thorlabs;
+using Stage_Library.PI;
 
 namespace PCFS.Model
 {
