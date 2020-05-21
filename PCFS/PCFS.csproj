@@ -90,21 +90,8 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
-    <Reference Include="Thorlabs.MotionControl.DeviceManagerCLI, Version=1.14.16.15220, Culture=neutral, PublicKeyToken=c7ec6d6d6e2435e7, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\ProjectLibrary\DLL\Thorlabs.MotionControl.DeviceManagerCLI.dll</HintPath>
-    </Reference>
-    <Reference Include="Thorlabs.MotionControl.GenericMotorCLI, Version=1.14.16.15220, Culture=neutral, PublicKeyToken=c7ec6d6d6e2435e7, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\ProjectLibrary\DLL\Thorlabs.MotionControl.GenericMotorCLI.dll</HintPath>
-    </Reference>
-    <Reference Include="ThorLabs.MotionControl.KCube.DCServoCLI, Version=1.14.16.15220, Culture=neutral, PublicKeyToken=c7ec6d6d6e2435e7, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\ProjectLibrary\DLL\ThorLabs.MotionControl.KCube.DCServoCLI.dll</HintPath>
-    </Reference>
-    <Reference Include="TimeTagger_Library_x64, Version=0.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="TimeTagger_Library_x64">
       <HintPath>..\TimeTagger_Library_x64.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />

@@ -145,8 +145,9 @@ namespace PCFS.Model
             //Simulation with SimulatedTimeTagger
             if(!string.IsNullOrEmpty(simfilefolder))
             {              
-                _linearStage = new SimulatedLinearStage(_loggerCallback);
-                _linearStage.Connect("");
+                var simStage = new SimulatedLinearStage(_loggerCallback);
+                simStage.Connect("");
+                _linearStage = simStage;
 
                 _timeTagger = new SimulatedTagger(_loggerCallback)
                 {
@@ -157,10 +158,20 @@ namespace PCFS.Model
             //Real measurement with TimeTagger
             else
             {
-                _linearStage = new PI_GCS2_Stage(_loggerCallback);
-                _linearStage.Connect("C-863");
+                var linStage = new PI_GCS2_Stage(_loggerCallback);             
+                linStage.Connect("C-863");
+                _linearStage = linStage;
 
-                _timeTagger = new HydraHarp(_loggerCallback);
+                _timeTagger = new HydraHarp(_loggerCallback)
+                {
+                    DiscriminatorLevel = 200,
+                    SyncDivider = 8,
+                    SyncDiscriminatorLevel = 200,
+                    MeasurementMode = HydraHarp.Mode.MODE_T2,
+                    ClockMode = HydraHarp.Clock.Internal,
+                    PackageMode = TimeTaggerBase.PMode.ByPackageSize,
+                    BufferSize = 100000
+                };
                 _timeTagger.Connect();
             }
 
@@ -294,7 +305,7 @@ namespace PCFS.Model
                 return;
             }
 
-            if (!_linearStage.ControllerReady)
+            if (!_linearStage.StageReady)
             {
                 WriteLog("Linear Stage not ready. Aborting...");
                 return;
@@ -436,7 +447,7 @@ namespace PCFS.Model
 
                     foreach(DataPoint pcfsPoint in _DataPoints)
                     {                                              
-                        if (_scanBgWorker.CancellationPending || !_linearStage.ControllerReady || !_timeTagger.CanCollect)
+                        if (_scanBgWorker.CancellationPending || !_linearStage.StageReady || !_timeTagger.CanCollect)
                         {
                             e.Cancel = true;
                             break;
@@ -461,11 +472,10 @@ namespace PCFS.Model
                         //Move stage in fast velocity to position
                         _linearStage.SetVelocity(FastVelocity);
                         _linearStage.Move_Absolute(pcfsPoint.StagePosition);
-                        _linearStage.WaitForPos();
 
                         //Start moving stage in slow velocity & Start collecting timetags
                         _linearStage.SetVelocity(SlowVelocity);
-                        _linearStage.Move_Relative(SlowVelocity * IntegrationTime);
+                        Task slowMoveTask = Task.Run( ()=>_linearStage.Move_Relative(SlowVelocity * IntegrationTime) );
 
                         if(!String.IsNullOrEmpty(_PCFSDataDirectory) && BackupTTTRData)
                         {
@@ -480,7 +490,7 @@ namespace PCFS.Model
                         _timeTagger.StartCollectingTimeTagsAsync();
 
                         //Wait for stage to arrive at target position
-                        _linearStage.WaitForPos();
+                        slowMoveTask.GetAwaiter().GetResult();
                         _timeTagger.StopCollectingTimeTags();
 
                         //ASYNCHRONOUSLY PROCESS DATA
