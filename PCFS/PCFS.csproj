@@ -90,9 +90,6 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
-    <Reference Include="TimeTagger_Library_x64">
-      <HintPath>..\TimeTagger_Library_x64.dll</HintPath>
-    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -158,6 +155,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\ProjectLibrary\TimeTagger_Library_x64\TimeTagger_Library_x64.csproj">
+      <Project>{a06100f0-f9d0-47d9-9850-838ce873672e}</Project>
+      <Name>TimeTagger_Library_x64</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

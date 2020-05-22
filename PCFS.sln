@@ -5,7 +5,17 @@ VisualStudioVersion = 16.0.28803.452
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PCFS", "PCFS\PCFS.csproj", "{767F2A3C-BA7A-48A8-B066-7C4A3F5532F3}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeTagger_Library_x64", "..\ProjectLibrary\TimeTagger_Library_x64\TimeTagger_Library_x64.csproj", "{A06100F0-F9D0-47D9-9850-838CE873672E}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "TimeTagger_Library", "..\ProjectLibrary\TimeTagger_Library\TimeTagger_Library.shproj", "{721AF447-1302-4AF1-BC15-B3D878AFBBF8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extensions_Library", "..\ProjectLibrary\Extensions_Library\Extensions_Library.csproj", "{A72E8128-6414-4DAD-AA0C-B2F673A90FF8}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\ProjectLibrary\TimeTagger_Library\TimeTagger_Library.projitems*{721af447-1302-4af1-bc15-b3d878afbbf8}*SharedItemsImports = 13
+		..\ProjectLibrary\TimeTagger_Library\TimeTagger_Library.projitems*{a06100f0-f9d0-47d9-9850-838ce873672e}*SharedItemsImports = 5
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
@@ -21,6 +31,22 @@ Global
 		{767F2A3C-BA7A-48A8-B066-7C4A3F5532F3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{767F2A3C-BA7A-48A8-B066-7C4A3F5532F3}.Release|x64.ActiveCfg = Release|x64
 		{767F2A3C-BA7A-48A8-B066-7C4A3F5532F3}.Release|x64.Build.0 = Release|x64
+		{A06100F0-F9D0-47D9-9850-838CE873672E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A06100F0-F9D0-47D9-9850-838CE873672E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A06100F0-F9D0-47D9-9850-838CE873672E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A06100F0-F9D0-47D9-9850-838CE873672E}.Debug|x64.Build.0 = Debug|Any CPU
+		{A06100F0-F9D0-47D9-9850-838CE873672E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A06100F0-F9D0-47D9-9850-838CE873672E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A06100F0-F9D0-47D9-9850-838CE873672E}.Release|x64.ActiveCfg = Release|Any CPU
+		{A06100F0-F9D0-47D9-9850-838CE873672E}.Release|x64.Build.0 = Release|Any CPU
+		{A72E8128-6414-4DAD-AA0C-B2F673A90FF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A72E8128-6414-4DAD-AA0C-B2F673A90FF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A72E8128-6414-4DAD-AA0C-B2F673A90FF8}.Debug|x64.ActiveCfg = Debug|x64
+		{A72E8128-6414-4DAD-AA0C-B2F673A90FF8}.Debug|x64.Build.0 = Debug|x64
+		{A72E8128-6414-4DAD-AA0C-B2F673A90FF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A72E8128-6414-4DAD-AA0C-B2F673A90FF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A72E8128-6414-4DAD-AA0C-B2F673A90FF8}.Release|x64.ActiveCfg = Release|x64
+		{A72E8128-6414-4DAD-AA0C-B2F673A90FF8}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
