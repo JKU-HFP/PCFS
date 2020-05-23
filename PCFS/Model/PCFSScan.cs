@@ -473,10 +473,10 @@ namespace PCFS.Model
                         _linearStage.SetVelocity(FastVelocity);
                         _linearStage.Move_Absolute(pcfsPoint.StagePosition);
 
-                        //Start moving stage in slow velocity & Start collecting timetags
+                        //Set stage velocity
                         _linearStage.SetVelocity(SlowVelocity);
-                        Task slowMoveTask = Task.Run( ()=>_linearStage.Move_Relative(SlowVelocity * IntegrationTime) );
 
+                        //Define backup path
                         if(!String.IsNullOrEmpty(_PCFSDataDirectory) && BackupTTTRData)
                         {
                             string taggerbackupdirectory = Directory.CreateDirectory(Path.Combine(_PCFSDataDirectory, "TTTR_Backup")).ToString();
@@ -486,6 +486,9 @@ namespace PCFS.Model
                         {
                             _timeTagger.BackupFilename = "";
                         }
+
+                        //Start moving stage in slow velocity & Start collecting timetags
+                        Task slowMoveTask = Task.Run(() => _linearStage.Move_Relative(SlowVelocity * IntegrationTime));
 
                         _timeTagger.StartCollectingTimeTagsAsync();
 
