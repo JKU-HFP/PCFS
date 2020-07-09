@@ -563,7 +563,7 @@ namespace PCFS.Model
 
             //Calculate energy scale
             double[] positions = relevantPoints.Select(p => p.StagePosition).ToArray();
-            double eScaleFactor = 1239.84 / (positions.Length * StepWidth); //10^6 * 2 pi c hbar / eCharge [ueV]
+            double eScaleFactor = 1239.84 / (positions.Length * 2 * StepWidth); //10^6 * 2 pi c hbar / eCharge [ueV] FACTOR 2 because of optical path length
 
             int[] posIndices = Enumerable.Range(0, relevantPoints.Count()).ToArray();
 
