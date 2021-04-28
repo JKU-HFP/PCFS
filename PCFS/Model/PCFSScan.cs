@@ -15,7 +15,7 @@ using MathNet.Numerics.IntegralTransforms;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Stage_Library;
-using Stage_Library.PI;
+using Stage_Library.Owis;
 
 namespace PCFS.Model
 {
@@ -158,9 +158,9 @@ namespace PCFS.Model
             //Real measurement with TimeTagger
             else
             {
-                var linStage = new PI_GCS2_Stage(_loggerCallback);             
-                linStage.Connect("C-863");
-                _linearStage = linStage;
+                var controller = new PS10Controller(_loggerCallback);
+                controller.Connect("COM8");
+                _linearStage = controller.GetStages().FirstOrDefault();
 
                 _timeTagger = new HydraHarp(_loggerCallback)
                 {
