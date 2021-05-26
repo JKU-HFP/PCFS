@@ -68,7 +68,8 @@
     <Reference Include="MathNet.Numerics, Version=4.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MathNet.Numerics.4.7.0\lib\net461\MathNet.Numerics.dll</HintPath>
     </Reference>
-    <Reference Include="Stage_Library_x64">
+    <Reference Include="Stage_Library_x64, Version=0.2.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Stage_Library_x64.dll</HintPath>
     </Reference>
     <Reference Include="System" />

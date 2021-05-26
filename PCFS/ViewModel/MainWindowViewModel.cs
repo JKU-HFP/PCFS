@@ -107,7 +107,7 @@ namespace PCFS.ViewModel
 
 
 
-        private double _fastVelocity = 25.0;
+        private double _fastVelocity = 8;
         public double FastVelocity
         {
             get { return _fastVelocity; }
@@ -118,7 +118,7 @@ namespace PCFS.ViewModel
             }
         }
 
-        private double _slowVelocity = 0.000125;
+        private double _slowVelocity = 0.0005;
         public double SlowVelocity
         {
             get { return _slowVelocity; }

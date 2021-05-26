@@ -161,6 +161,7 @@ namespace PCFS.Model
                 var controller = new PS10Controller(_loggerCallback);
                 controller.Connect("COM8");
                 _linearStage = controller.GetStages().FirstOrDefault();
+                _linearStage.SetVelocity(FastVelocity);
 
                 _timeTagger = new HydraHarp(_loggerCallback)
                 {
